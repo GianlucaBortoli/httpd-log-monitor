@@ -8,13 +8,13 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	s := New(10)
+	s := NewTopK(10)
 	assert.NotNil(t, s)
 	assert.IsType(t, &TopK{}, s)
 }
 
 func TestTopK_AddOrUpdate(t *testing.T) {
-	s := New(10)
+	s := NewTopK(10)
 	assert.NotNil(t, s)
 
 	ok := s.addOrUpdate("a", 1)
@@ -26,7 +26,7 @@ func TestTopK_AddOrUpdate(t *testing.T) {
 }
 
 func TestTopK_TopKExact(t *testing.T) {
-	s := New(3)
+	s := NewTopK(3)
 	assert.NotNil(t, s)
 
 	ok := s.addOrUpdate("a", 1)
@@ -38,13 +38,13 @@ func TestTopK_TopKExact(t *testing.T) {
 
 	val := s.TopK()
 	assert.Len(t, val, 3)
-	assert.Equal(t, val[0], "c")
-	assert.Equal(t, val[1], "b")
-	assert.Equal(t, val[2], "a")
+	assert.Equal(t, val[0].key, "c")
+	assert.Equal(t, val[1].key, "b")
+	assert.Equal(t, val[2].key, "a")
 }
 
 func TestTopK_TopKLess(t *testing.T) {
-	s := New(1)
+	s := NewTopK(1)
 	assert.NotNil(t, s)
 
 	ok := s.addOrUpdate("a", 1)
@@ -56,11 +56,11 @@ func TestTopK_TopKLess(t *testing.T) {
 
 	val := s.TopK()
 	assert.Len(t, val, 1)
-	assert.Equal(t, val[0], "c")
+	assert.Equal(t, val[0].key, "c")
 }
 
 func TestTopK_TopKMore(t *testing.T) {
-	s := New(10)
+	s := NewTopK(10)
 	assert.NotNil(t, s)
 
 	ok := s.addOrUpdate("a", 1)
@@ -72,13 +72,13 @@ func TestTopK_TopKMore(t *testing.T) {
 
 	val := s.TopK()
 	assert.Len(t, val, 3)
-	assert.Equal(t, val[0], "c")
-	assert.Equal(t, val[1], "b")
-	assert.Equal(t, val[2], "a")
+	assert.Equal(t, val[0].key, "c")
+	assert.Equal(t, val[1].key, "b")
+	assert.Equal(t, val[2].key, "a")
 }
 
 func TestTopK_IncrBy(t *testing.T) {
-	s := New(10)
+	s := NewTopK(10)
 	assert.NotNil(t, s)
 
 	ok := s.IncrBy("a", 1)
@@ -101,7 +101,7 @@ func TestTopK_IncrBy(t *testing.T) {
 }
 
 func TestTopK_IncrByErr(t *testing.T) {
-	s := New(10)
+	s := NewTopK(10)
 	assert.NotNil(t, s)
 
 	ok := s.IncrBy("a", -1)
@@ -112,4 +112,22 @@ func TestTopK_IncrByErr(t *testing.T) {
 
 	ok = s.IncrBy("a", 1)
 	assert.True(t, ok)
+}
+
+func TestTopK_Reset(t *testing.T) {
+	s := NewTopK(10)
+	assert.NotNil(t, s)
+
+	ok := s.IncrBy("a", 1)
+	assert.True(t, ok)
+	ok = s.IncrBy("b", 1)
+	assert.True(t, ok)
+	ok = s.IncrBy("c", 1)
+	assert.True(t, ok)
+	cnt := s.sortedSet.GetCount()
+	assert.Equal(t, 3, cnt)
+
+	s.Reset()
+	cnt = s.sortedSet.GetCount()
+	assert.Equal(t, 0, cnt)
 }

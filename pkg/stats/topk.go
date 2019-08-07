@@ -1,6 +1,10 @@
 package stats
 
-import "github.com/wangjia184/sortedset"
+import (
+	"fmt"
+
+	"github.com/wangjia184/sortedset"
+)
 
 // TopK is an efficient data structure to store a scoreboard
 type TopK struct {
@@ -8,8 +12,17 @@ type TopK struct {
 	sortedSet *sortedset.SortedSet
 }
 
-// New returns a new TopK
-func New(k int) *TopK {
+type TopKItem struct {
+	key   string
+	score int64
+}
+
+func (i *TopKItem) String() string {
+	return fmt.Sprintf("key:%s, score:%d", i.key, i.score)
+}
+
+// NewTopK returns a new TopK metric
+func NewTopK(k int) *TopK {
 	return &TopK{
 		k:         k,
 		sortedSet: sortedset.New(),
@@ -35,16 +48,25 @@ func (t *TopK) IncrBy(key string, incr int64) bool {
 }
 
 // TopK returns at maximum "t.k" keys from the SortedSet
-func (t *TopK) TopK() []string {
-	var out []string
+func (t *TopK) TopK() []*TopKItem {
+	var out []*TopKItem
 	for i := 0; i < t.k; i++ {
 		max := t.sortedSet.PopMax()
 		// Append key only on valid elements. PopMax returns nil if the SortedSet is empty
 		if max != nil {
-			out = append(out, max.Key())
+			out = append(out, &TopKItem{
+				key:   max.Key(),
+				score: int64(max.Score()),
+			})
 		}
 	}
 	return out
+}
+
+// Reset replaces the SortedSet with an empty one.
+// This means that this deletes any data that was inside.
+func (t *TopK) Reset() {
+	t.sortedSet = sortedset.New()
 }
 
 func (t *TopK) addOrUpdate(key string, score int64) bool {

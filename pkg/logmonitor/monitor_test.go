@@ -1,4 +1,4 @@
-package monitor
+package logmonitor
 
 import (
 	"os"
