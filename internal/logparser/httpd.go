@@ -23,7 +23,7 @@ type Line struct {
 	User          string
 	Date          time.Time
 	Method        string
-	Path          string
+	Section       string
 	Protocol      string
 	StatusCode    int
 	ContentLength int
@@ -42,13 +42,17 @@ func (p *HTTPd) ParseLine(line string) (*Line, error) {
 		return nil, err
 	}
 
+	section, err := getSectionFromResource(l.RequestURI)
+	if err != nil {
+		return nil, err
+	}
 	return &Line{
 		RemoteHost:    l.Host,
 		RemoteLogName: l.RemoteLogname,
 		User:          l.User,
 		Date:          l.Time,
 		Method:        l.Method,
-		Path:          l.RequestURI,
+		Section:       section,
 		Protocol:      l.Protocol,
 		StatusCode:    l.Status,
 		ContentLength: int(l.Size),
