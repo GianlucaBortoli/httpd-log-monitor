@@ -56,5 +56,5 @@ func (t *Tailer) Wait() error {
 	if t.tail != nil && t.started {
 		return t.tail.Wait()
 	}
-	return fmt.Errorf("cannot wait if tailer isn't started")
+	return fmt.Errorf("tailer cannot wait if not started")
 }
