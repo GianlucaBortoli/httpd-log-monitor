@@ -33,11 +33,11 @@ func (t *Tailer) Start() (<-chan *tail.Line, error) {
 		return nil, fmt.Errorf("tailer can be started only once")
 	}
 
-	t.started = true
 	tf, err := tail.TailFile(t.fileName, t.tailConf)
 	if err != nil {
 		return nil, err
 	}
+	t.started = true
 	t.tail = tf
 	return tf.Lines, nil
 }
@@ -53,7 +53,7 @@ func (t *Tailer) Stop() error {
 // Wait blocks until the tailer goroutine is in a dead state.
 // Returns the reason for its death.
 func (t *Tailer) Wait() error {
-	if t.tail != nil {
+	if t.tail != nil && t.started {
 		return t.tail.Wait()
 	}
 	return fmt.Errorf("cannot wait if tailer isn't started")
