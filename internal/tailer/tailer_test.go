@@ -2,27 +2,12 @@ package tailer
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 	"sync"
 	"testing"
 
+	"github.com/cog-qlik/httpd-log-monitor/internal/testutils"
 	"github.com/stretchr/testify/assert"
 )
-
-const fileName = "tailer-test-"
-
-func createTestFile() (*os.File, error) {
-	tmpFile, err := ioutil.TempFile(os.TempDir(), fileName)
-	if err != nil {
-		return nil, err
-	}
-	return tmpFile, nil
-}
-
-func removeTestFile(f *os.File) error {
-	return os.Remove(f.Name())
-}
 
 func TestNew(t *testing.T) {
 	tailer := New("asd")
@@ -31,9 +16,9 @@ func TestNew(t *testing.T) {
 }
 
 func TestTailer_Start(t *testing.T) {
-	f, err := createTestFile()
+	f, err := testutils.CreateTestFile()
 	assert.NoError(t, err)
-	defer removeTestFile(f)
+	defer testutils.RemoveTestFile(f)
 
 	tailer := New(f.Name())
 	var wg sync.WaitGroup
@@ -73,9 +58,9 @@ func TestTailer_Start(t *testing.T) {
 }
 
 func TestTailer_StartAlreadyStarted(t *testing.T) {
-	f, err := createTestFile()
+	f, err := testutils.CreateTestFile()
 	assert.NoError(t, err)
-	defer removeTestFile(f)
+	defer testutils.RemoveTestFile(f)
 
 	tailer := New(f.Name())
 	lines, err := tailer.Start()
@@ -95,9 +80,9 @@ func TestTailer_StartFileNotExistsErr(t *testing.T) {
 }
 
 func TestTailer_StartAndStop(t *testing.T) {
-	f, err := createTestFile()
+	f, err := testutils.CreateTestFile()
 	assert.NoError(t, err)
-	defer removeTestFile(f)
+	defer testutils.RemoveTestFile(f)
 
 	tailer := New(f.Name())
 	lines, startErr := tailer.Start()
@@ -109,9 +94,9 @@ func TestTailer_StartAndStop(t *testing.T) {
 }
 
 func TestTailer_StopWhenNotStarted(t *testing.T) {
-	f, err := createTestFile()
+	f, err := testutils.CreateTestFile()
 	assert.NoError(t, err)
-	defer removeTestFile(f)
+	defer testutils.RemoveTestFile(f)
 
 	tailer := New(f.Name())
 	stopErr := tailer.Stop()
@@ -119,9 +104,9 @@ func TestTailer_StopWhenNotStarted(t *testing.T) {
 }
 
 func TestTailer_WaitAfterStartAndStop(t *testing.T) {
-	f, err := createTestFile()
+	f, err := testutils.CreateTestFile()
 	assert.NoError(t, err)
-	defer removeTestFile(f)
+	defer testutils.RemoveTestFile(f)
 
 	tailer := New(f.Name())
 	lines, startErr := tailer.Start()
@@ -136,9 +121,9 @@ func TestTailer_WaitAfterStartAndStop(t *testing.T) {
 }
 
 func TestTailer_WaitNotStarted(t *testing.T) {
-	f, err := createTestFile()
+	f, err := testutils.CreateTestFile()
 	assert.NoError(t, err)
-	defer removeTestFile(f)
+	defer testutils.RemoveTestFile(f)
 
 	tailer := New(f.Name())
 	waitErr := tailer.Wait()
