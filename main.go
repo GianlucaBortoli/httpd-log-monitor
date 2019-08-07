@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/cog-qlik/httpd-log-monitor/internal/tailer"
+	"github.com/cog-qlik/httpd-log-monitor/pkg/monitor"
 )
 
 func main() {
@@ -12,15 +12,15 @@ func main() {
 	flag.Parse()
 
 	t := tailer.New(*file)
-	lines, err := t.Start()
+	m, err := monitor.New(t)
 	if err != nil {
 		panic(err)
 	}
 
-	for l := range lines {
-		fmt.Println(l.Text)
+	if err := m.Start(); err != nil {
+		panic(err)
 	}
-	if err := t.Wait(); err != nil {
+	if err := m.Wait(); err != nil {
 		panic(err)
 	}
 }
