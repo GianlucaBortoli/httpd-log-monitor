@@ -21,17 +21,14 @@ type Monitor struct {
 }
 
 // New creates a monitor. Returns the monitor and an error
-func New(tailer *tailer.Tailer) (*Monitor, error) {
-	if tailer == nil {
-		return nil, fmt.Errorf("monitor needs a log tailer")
-	}
+func New(fileName string) *Monitor {
 	return &Monitor{
 		parser:    logparser.New(),
-		tailer:    tailer,
+		tailer:    tailer.New(fileName),
 		log:       log.New(os.Stderr, "", log.LstdFlags),
 		quitChan:  make(chan struct{}),
 		startTime: time.Now(),
-	}, nil
+	}
 }
 
 // Start starts tailing and processing the log file in a separate goroutine

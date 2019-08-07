@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/cog-qlik/httpd-log-monitor/internal/logparser"
-	"github.com/cog-qlik/httpd-log-monitor/internal/tailer"
 	"github.com/cog-qlik/httpd-log-monitor/internal/testutils"
 	"github.com/hpcloud/tail"
 	"github.com/stretchr/testify/assert"
@@ -14,8 +13,7 @@ import (
 
 func getTestMonitor() (*Monitor, *os.File) {
 	f, _ := testutils.CreateTestFile()
-	ta := tailer.New(f.Name())
-	m, _ := New(ta)
+	m := New(f.Name())
 	return m, f
 }
 
@@ -24,16 +22,9 @@ func TestNew(t *testing.T) {
 	assert.NoError(t, err)
 	defer testutils.RemoveTestFile(f)
 
-	ta := tailer.New(f.Name())
-	m, err := New(ta)
-	assert.NoError(t, err)
+	m := New(f.Name())
 	assert.NotNil(t, m)
-}
-
-func TestNew_NilTailerErr(t *testing.T) {
-	m, err := New(nil)
-	assert.Error(t, err)
-	assert.Nil(t, m)
+	assert.IsType(t, &Monitor{}, m)
 }
 
 func TestMonitor_Start(t *testing.T) {

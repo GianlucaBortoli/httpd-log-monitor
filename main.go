@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 
-	"github.com/cog-qlik/httpd-log-monitor/internal/tailer"
 	"github.com/cog-qlik/httpd-log-monitor/pkg/monitor"
 )
 
@@ -11,11 +10,7 @@ func main() {
 	file := flag.String("file", "/tmp/access.log", "The path to the log file")
 	flag.Parse()
 
-	t := tailer.New(*file)
-	m, err := monitor.New(t)
-	if err != nil {
-		panic(err)
-	}
+	m := monitor.New(*file)
 
 	if err := m.Start(); err != nil {
 		panic(err)
