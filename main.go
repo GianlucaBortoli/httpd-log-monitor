@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	file := flag.String("file", "/tmp/access.log", "The log file path to tail")
+	file := flag.String("file", "/tmp/access.log", "The path to the log file")
 	flag.Parse()
 
 	t := tailer.New(*file)

@@ -49,7 +49,8 @@ func TestTailer_Start(t *testing.T) {
 		for i := 0; i < linesToWrite; i++ {
 			_, err := f.WriteString(fmt.Sprintf("Line %d\n", i))
 			assert.NoError(t, err)
-			f.Sync() // Make sure every line is written to disk
+			syncErr := f.Sync() // Make sure every line is written to disk
+			assert.NoError(t, syncErr)
 		}
 	}()
 
@@ -99,7 +100,10 @@ func TestTailer_StartAndStop(t *testing.T) {
 	defer removeTestFile(f)
 
 	tailer := New(f.Name())
-	tailer.Start()
+	lines, startErr := tailer.Start()
+	assert.NoError(t, startErr)
+	assert.NotNil(t, lines)
+
 	stopErr := tailer.Stop()
 	assert.NoError(t, stopErr)
 }
@@ -120,8 +124,13 @@ func TestTailer_WaitAfterStartAndStop(t *testing.T) {
 	defer removeTestFile(f)
 
 	tailer := New(f.Name())
-	tailer.Start()
-	tailer.Stop()
+	lines, startErr := tailer.Start()
+	assert.NoError(t, startErr)
+	assert.NotNil(t, lines)
+
+	stopErr := tailer.Stop()
+	assert.NoError(t, stopErr)
+
 	waitErr := tailer.Wait()
 	assert.NoError(t, waitErr)
 }

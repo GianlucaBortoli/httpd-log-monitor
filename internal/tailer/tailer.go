@@ -6,6 +6,7 @@ import (
 	"github.com/hpcloud/tail"
 )
 
+// Tailer the file tailer
 type Tailer struct {
 	fileName string
 	tailConf tail.Config
@@ -13,6 +14,7 @@ type Tailer struct {
 	started  bool
 }
 
+// New returns a tailer for the given file
 func New(fileName string) *Tailer {
 	return &Tailer{
 		fileName: fileName,
@@ -24,6 +26,8 @@ func New(fileName string) *Tailer {
 	}
 }
 
+// Start starts the tailing process in a separate goroutine.
+// Returns the lines channel and an error
 func (t *Tailer) Start() (<-chan *tail.Line, error) {
 	if t.started {
 		return nil, fmt.Errorf("tailer can be started only once")
@@ -38,6 +42,7 @@ func (t *Tailer) Start() (<-chan *tail.Line, error) {
 	return tf.Lines, nil
 }
 
+// Stop stops the tailing process, gracefully exiting the background goroutines
 func (t *Tailer) Stop() error {
 	if !t.started {
 		return fmt.Errorf("tailer can be stopped only after start")
@@ -45,6 +50,8 @@ func (t *Tailer) Stop() error {
 	return t.tail.Stop()
 }
 
+// Wait blocks until the tailer goroutine is in a dead state.
+// Returns the reason for its death.
 func (t *Tailer) Wait() error {
 	if t.tail != nil {
 		return t.tail.Wait()
