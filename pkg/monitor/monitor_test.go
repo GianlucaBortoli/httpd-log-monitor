@@ -131,7 +131,7 @@ func TestMonitor_FilterLine(t *testing.T) {
 				User:          "james",
 				Date:          futureDateTime,
 				Method:        "GET",
-				Path:          "/report",
+				Section:       "/report",
 				Protocol:      "HTTP/1.0",
 				StatusCode:    200,
 				ContentLength: 123,
