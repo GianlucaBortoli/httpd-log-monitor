@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/cog-qlik/httpd-log-monitor/pkg/stats/topk"
@@ -17,7 +18,7 @@ type Manager struct {
 	startOnce    sync.Once
 	stopOnce     sync.Once
 	log          *log.Logger
-	started      bool
+	started      int32 // 0 stopped, 1 started
 }
 
 func NewManager(period time.Duration, k int) *Manager {
@@ -33,12 +34,12 @@ func NewManager(period time.Duration, k int) *Manager {
 func (m *Manager) Start() {
 	m.startOnce.Do(func() {
 		go m.loop()
-		m.started = true
+		atomic.StoreInt32(&m.started, 1)
 	})
 }
 
 func (m *Manager) Stop() {
-	if !m.started {
+	if atomic.LoadInt32(&m.started) == 0 {
 		return
 	}
 	// Ensure signal on quitChan is sent only once
@@ -48,7 +49,7 @@ func (m *Manager) Stop() {
 }
 
 func (m *Manager) ObserveSection(s string) {
-	if !m.started {
+	if atomic.LoadInt32(&m.started) == 0 {
 		return
 	}
 	m.sectionsChan <- &topk.Item{Key: s, Score: 1}
