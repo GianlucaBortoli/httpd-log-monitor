@@ -72,6 +72,9 @@ func (m *Manager) loop() {
 }
 
 func (m *Manager) printSections(sections []*topk.Item) {
+	if len(sections) == 0 {
+		m.log.Println("no sections in the last period")
+	}
 	for _, s := range sections {
 		m.log.Println(s.String())
 	}

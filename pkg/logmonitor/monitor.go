@@ -8,26 +8,29 @@ import (
 
 	"github.com/cog-qlik/httpd-log-monitor/internal/logparser"
 	"github.com/cog-qlik/httpd-log-monitor/internal/tailer"
+	"github.com/cog-qlik/httpd-log-monitor/pkg/stats"
 	"github.com/hpcloud/tail"
 )
 
 // Monitor scrapes log files and derives statistics from it
 type Monitor struct {
-	parser    *logparser.HTTPd
-	tailer    *tailer.Tailer
-	log       *log.Logger
-	quitChan  chan struct{}
-	startTime time.Time
+	parser       *logparser.HTTPd
+	tailer       *tailer.Tailer
+	statsManager *stats.Manager
+	log          *log.Logger
+	quitChan     chan struct{}
+	startTime    time.Time
 }
 
 // New creates a monitor. Returns the monitor and an error
-func New(fileName string) *Monitor {
+func New(fileName string, statsPeriod time.Duration, statsTopK int) *Monitor {
 	return &Monitor{
-		parser:    logparser.New(),
-		tailer:    tailer.New(fileName),
-		log:       log.New(os.Stderr, "", log.LstdFlags),
-		quitChan:  make(chan struct{}),
-		startTime: time.Now(),
+		parser:       logparser.New(),
+		tailer:       tailer.New(fileName),
+		statsManager: stats.NewManager(statsPeriod, statsTopK),
+		log:          log.New(os.Stderr, "", log.LstdFlags),
+		quitChan:     make(chan struct{}),
+		startTime:    time.Now(),
 	}
 }
 
@@ -39,6 +42,7 @@ func (m *Monitor) Start() error {
 	}
 
 	go m.startParsingTail(lines)
+	m.statsManager.Start()
 	return nil
 }
 
@@ -48,6 +52,7 @@ func (m *Monitor) Stop() error {
 		return err
 	}
 	m.quitChan <- struct{}{}
+	m.statsManager.Stop()
 	return nil
 }
 
@@ -65,8 +70,9 @@ func (m *Monitor) startParsingTail(lines <-chan *tail.Line) {
 			good, err := m.filterLine(l)
 			if err != nil {
 				m.log.Println("[ERROR]", err)
+				continue
 			}
-			m.log.Println(good)
+			m.statsManager.ObserveSection(good.Section)
 		case <-m.quitChan:
 			m.log.Println("[INFO] exiting monitor")
 			return
