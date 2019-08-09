@@ -3,6 +3,7 @@ package stats
 import (
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/cog-qlik/httpd-log-monitor/pkg/stats/topk"
@@ -13,6 +14,8 @@ type Manager struct {
 	sectionsTopK *topk.TopK
 	sectionsChan chan *topk.Item
 	quitChan     chan struct{}
+	startOnce    sync.Once
+	stopOnce     sync.Once
 	log          *log.Logger
 	started      bool
 }
@@ -28,17 +31,25 @@ func NewManager(period time.Duration, k int) *Manager {
 }
 
 func (m *Manager) Start() {
-	go m.loop()
-	m.started = true
+	m.startOnce.Do(func() {
+		go m.loop()
+		m.started = true
+	})
 }
 
 func (m *Manager) Stop() {
-	m.quitChan <- struct{}{}
+	if !m.started {
+		return
+	}
+	// Ensure signal on quitChan is sent only once
+	m.stopOnce.Do(func() {
+		m.quitChan <- struct{}{}
+	})
 }
 
 func (m *Manager) ObserveSection(s string) {
 	if !m.started {
-		return // noop
+		return
 	}
 	m.sectionsChan <- &topk.Item{Key: s, Score: 1}
 }
@@ -55,8 +66,7 @@ func (m *Manager) loop() {
 			}
 		case <-m.quitChan:
 			m.log.Println("[INFO] exiting stats manager")
-			close(m.sectionsChan)
-			close(m.quitChan)
+			return
 		}
 	}
 }

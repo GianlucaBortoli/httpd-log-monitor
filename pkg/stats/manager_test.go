@@ -30,8 +30,43 @@ func TestManager_ObserveSection(t *testing.T) {
 	assert.Equal(t, 0, cnt)
 
 	m.ObserveSection("/foo")
+	m.ObserveSection("/foo")
+	m.ObserveSection("/bar")
+	m.ObserveSection("/bar")
 	m.ObserveSection("/bar")
 	m.ObserveSection("/baz")
+	// Give ticker some time to fire so I see console output
+	time.Sleep(70 * time.Millisecond)
+}
 
-	time.Sleep(100 * time.Millisecond) // give ticker the time to fire
+func TestManager_Start(t *testing.T) {
+	m := getTestManager()
+	m.Start()
+}
+
+func TestManager_StartMultiple(t *testing.T) {
+	m := getTestManager()
+	m.Start()
+	m.Start()
+	m.Start()
+	m.Start()
+}
+
+func TestManager_StartAndStop(t *testing.T) {
+	m := getTestManager()
+	m.Start()
+	m.Stop()
+}
+
+func TestManager_StartAndMultipleStop(t *testing.T) {
+	m := getTestManager()
+	m.Start()
+	m.Stop()
+	m.Stop()
+	m.Stop()
+}
+
+func TestManager_StopNotStarted(t *testing.T) {
+	m := getTestManager()
+	m.Stop()
 }
