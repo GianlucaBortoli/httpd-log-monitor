@@ -4,27 +4,24 @@ import (
 	"log"
 	"os"
 	"time"
+
+	"github.com/cog-qlik/httpd-log-monitor/pkg/stats/topk"
 )
 
 type Manager struct {
 	ticker       *time.Ticker
-	sectionsTopK *TopK
-	sectionsChan chan *sectionsObs
+	sectionsTopK *topk.TopK
+	sectionsChan chan *topk.Item
 	quitChan     chan struct{}
 	log          *log.Logger
 	started      bool
 }
 
-type sectionsObs struct {
-	key  string
-	incr int64
-}
-
 func NewManager(period time.Duration, k int) *Manager {
 	return &Manager{
 		ticker:       time.NewTicker(period),
-		sectionsTopK: NewTopK(k),
-		sectionsChan: make(chan *sectionsObs),
+		sectionsTopK: topk.New(k),
+		sectionsChan: make(chan *topk.Item),
 		quitChan:     make(chan struct{}),
 		log:          log.New(os.Stderr, "", log.LstdFlags),
 	}
@@ -43,7 +40,7 @@ func (m *Manager) ObserveSection(s string) {
 	if !m.started {
 		return // noop
 	}
-	m.sectionsChan <- &sectionsObs{key: s, incr: 1}
+	m.sectionsChan <- &topk.Item{Key: s, Score: 1}
 }
 
 func (m *Manager) loop() {
@@ -52,9 +49,9 @@ func (m *Manager) loop() {
 		case <-m.ticker.C:
 			m.printSections(m.sectionsTopK.TopK())
 			m.sectionsTopK.Reset()
-		case o := <-m.sectionsChan:
-			if ok := m.sectionsTopK.IncrBy(o.key, o.incr); !ok {
-				m.log.Printf("[ERROR] cannot incremet key %s by %d\n", o.key, o.incr)
+		case i := <-m.sectionsChan:
+			if ok := m.sectionsTopK.IncrBy(i); !ok {
+				m.log.Printf("[ERROR] cannot incremet key %s by %d\n", i.Key, i.Score)
 			}
 		case <-m.quitChan:
 			m.log.Println("[INFO] exiting stats manager")
@@ -64,7 +61,7 @@ func (m *Manager) loop() {
 	}
 }
 
-func (m *Manager) printSections(sections []*TopKItem) {
+func (m *Manager) printSections(sections []*topk.Item) {
 	for _, s := range sections {
 		m.log.Println(s.String())
 	}

@@ -26,7 +26,7 @@ func TestManager_ObserveSection(t *testing.T) {
 	m := getTestManager()
 	m.Start()
 
-	cnt := m.sectionsTopK.sortedSet.GetCount()
+	cnt := m.sectionsTopK.GetCount()
 	assert.Equal(t, 0, cnt)
 
 	m.ObserveSection("/foo")
