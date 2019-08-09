@@ -1,4 +1,4 @@
-package monitor
+package logmonitor
 
 import (
 	"os"
@@ -13,7 +13,7 @@ import (
 
 func getTestMonitor() (*Monitor, *os.File) {
 	f, _ := testutils.CreateTestFile()
-	m := New(f.Name())
+	m := New(f.Name(), 10*time.Second, 10)
 	return m, f
 }
 
@@ -22,7 +22,7 @@ func TestNew(t *testing.T) {
 	assert.NoError(t, err)
 	defer testutils.RemoveTestFile(f)
 
-	m := New(f.Name())
+	m := New(f.Name(), 10*time.Second, 10)
 	assert.NotNil(t, m)
 	assert.IsType(t, &Monitor{}, m)
 }
