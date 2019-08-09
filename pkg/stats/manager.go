@@ -76,6 +76,7 @@ func (m *Manager) ObserveSection(s string) {
 	m.sectionsChan <- &topk.Item{Key: s, Score: 1}
 }
 
+// ObserveRequest observe a data point for the requests per second statistic
 func (m *Manager) ObserveRequest() {
 	m.reqSecChan <- float64(1)
 }
@@ -115,7 +116,7 @@ func (m *Manager) resetAllMetrics() {
 func (m *Manager) printReqSec() {
 	reqPerSec := m.reqSec.GetAvgPerSec()
 	period := m.reqSec.GetWindowSize().String()
-	m.log.Printf("%f req/s over last %s", reqPerSec, period)
+	m.log.Printf("%.2f req/s over last %s", reqPerSec, period)
 }
 
 func (m *Manager) printSections() {
