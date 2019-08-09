@@ -13,7 +13,10 @@ func main() {
 	statsK := flag.Int("statsK", 5, "The maximum number of stats to output every period")
 	flag.Parse()
 
-	m := logmonitor.New(*file, *statsPeriod, *statsK)
+	m, err := logmonitor.New(*file, *statsPeriod, *statsK)
+	if err != nil {
+		panic(err)
+	}
 
 	if err := m.Start(); err != nil {
 		panic(err)
