@@ -4,11 +4,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cog-qlik/httpd-log-monitor/pkg/stats/topk"
 	"github.com/stretchr/testify/assert"
 )
 
 func getTestManager() *Manager {
-	return NewManager(50*time.Millisecond, 10)
+	return NewManager(50*time.Millisecond, 10, nil)
 }
 
 func TestNewManager(t *testing.T) {
@@ -69,4 +70,10 @@ func TestManager_StartAndMultipleStop(t *testing.T) {
 func TestManager_StopNotStarted(t *testing.T) {
 	m := getTestManager()
 	m.Stop()
+}
+
+func TestManager_printSections(t *testing.T) {
+	m := getTestManager()
+	m.printSections(nil)
+	m.printSections([]*topk.Item{{"a", 1}, {"b", 2}})
 }

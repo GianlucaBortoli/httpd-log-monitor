@@ -24,11 +24,13 @@ type Monitor struct {
 
 // New creates a monitor. Returns the monitor and an error
 func New(fileName string, statsPeriod time.Duration, statsTopK int) *Monitor {
+	l := log.New(os.Stderr, "", log.LstdFlags)
+
 	return &Monitor{
 		parser:       logparser.New(),
 		tailer:       tailer.New(fileName),
-		statsManager: stats.NewManager(statsPeriod, statsTopK),
-		log:          log.New(os.Stderr, "", log.LstdFlags),
+		statsManager: stats.NewManager(statsPeriod, statsTopK, l),
+		log:          l,
 		quitChan:     make(chan struct{}),
 		startTime:    time.Now(),
 	}

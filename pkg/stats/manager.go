@@ -10,6 +10,7 @@ import (
 	"github.com/cog-qlik/httpd-log-monitor/pkg/stats/topk"
 )
 
+// Manager manages all the statistics computed from logs
 type Manager struct {
 	ticker       *time.Ticker
 	sectionsTopK *topk.TopK
@@ -21,16 +22,22 @@ type Manager struct {
 	started      int32 // 0 stopped, 1 started
 }
 
-func NewManager(period time.Duration, k int) *Manager {
+// NewManager returns a new manager
+func NewManager(period time.Duration, k int, l *log.Logger) *Manager {
+	if l == nil {
+		l = log.New(os.Stderr, "", log.LstdFlags)
+	}
+
 	return &Manager{
 		ticker:       time.NewTicker(period),
 		sectionsTopK: topk.New(k),
 		sectionsChan: make(chan *topk.Item),
 		quitChan:     make(chan struct{}),
-		log:          log.New(os.Stderr, "", log.LstdFlags),
+		log:          l,
 	}
 }
 
+// Start starts the stats manager
 func (m *Manager) Start() {
 	m.startOnce.Do(func() {
 		go m.loop()
@@ -38,6 +45,7 @@ func (m *Manager) Start() {
 	})
 }
 
+// Stop stops the stats manager
 func (m *Manager) Stop() {
 	if atomic.LoadInt32(&m.started) == 0 {
 		return
@@ -48,6 +56,7 @@ func (m *Manager) Stop() {
 	})
 }
 
+// ObserveSection observe a data point for the sections TopK statistic
 func (m *Manager) ObserveSection(s string) {
 	if atomic.LoadInt32(&m.started) == 0 {
 		return
