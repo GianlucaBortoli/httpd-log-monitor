@@ -1,4 +1,4 @@
-package avg
+package secavg
 
 import (
 	"testing"
@@ -13,7 +13,7 @@ func TestNew(t *testing.T) {
 	assert.NotNil(t, a)
 	assert.Equal(t, float64(0), a.count)
 	assert.Equal(t, time.Second, a.windowSize)
-	assert.IsType(t, &Avg{}, a)
+	assert.IsType(t, &SecAvg{}, a)
 }
 
 func TestNew_Err(t *testing.T) {
@@ -27,16 +27,20 @@ func TestAvg_IncrBy(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), a.count)
 
-	a.IncrBy(1)
+	err = a.IncrBy(1)
+	assert.NoError(t, err)
 	assert.Equal(t, float64(1), a.count)
 
-	a.IncrBy(0)
+	err = a.IncrBy(0)
+	assert.NoError(t, err)
 	assert.Equal(t, float64(1), a.count)
 
-	a.IncrBy(-1)
+	err = a.IncrBy(-1)
+	assert.Error(t, err)
 	assert.Equal(t, float64(1), a.count)
 
-	a.IncrBy(100)
+	err = a.IncrBy(100)
+	assert.NoError(t, err)
 	assert.Equal(t, float64(101), a.count)
 }
 
@@ -45,7 +49,8 @@ func TestAvg_Reset(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), a.count)
 
-	a.IncrBy(10)
+	err = a.IncrBy(10)
+	assert.NoError(t, err)
 	assert.Equal(t, float64(10), a.count)
 
 	a.Reset()
@@ -56,7 +61,8 @@ func TestAvg_GetAvgPerSec(t *testing.T) {
 	a, err := New(10 * time.Minute)
 	assert.NoError(t, err)
 
-	a.IncrBy(60)
+	err = a.IncrBy(60)
+	assert.NoError(t, err)
 	avgPerSec := a.GetAvgPerSec()
 	assert.Equal(t, 0.1, avgPerSec)
 }

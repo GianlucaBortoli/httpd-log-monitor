@@ -23,17 +23,22 @@ type Monitor struct {
 }
 
 // New creates a monitor. Returns the monitor and an error
-func New(fileName string, statsPeriod time.Duration, statsTopK int) *Monitor {
+func New(fileName string, statsPeriod time.Duration, statsTopK int) (*Monitor, error) {
 	l := log.New(os.Stderr, "", log.LstdFlags)
+
+	m, err := stats.NewManager(statsPeriod, statsTopK, l)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Monitor{
 		parser:       logparser.New(),
 		tailer:       tailer.New(fileName),
-		statsManager: stats.NewManager(statsPeriod, statsTopK, l),
+		statsManager: m,
 		log:          l,
 		quitChan:     make(chan struct{}),
 		startTime:    time.Now(),
-	}
+	}, nil
 }
 
 // Start starts tailing and processing the log file in a separate goroutine

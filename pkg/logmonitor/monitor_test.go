@@ -13,7 +13,7 @@ import (
 
 func getTestMonitor() (*Monitor, *os.File) {
 	f, _ := testutils.CreateTestFile()
-	m := New(f.Name(), 10*time.Second, 10)
+	m, _ := New(f.Name(), 10*time.Second, 10)
 	return m, f
 }
 
@@ -22,9 +22,20 @@ func TestNew(t *testing.T) {
 	assert.NoError(t, err)
 	defer testutils.RemoveTestFile(f)
 
-	m := New(f.Name(), 10*time.Second, 10)
+	m, err := New(f.Name(), 10*time.Second, 10)
+	assert.NoError(t, err)
 	assert.NotNil(t, m)
 	assert.IsType(t, &Monitor{}, m)
+}
+
+func TestNew_Err(t *testing.T) {
+	f, err := testutils.CreateTestFile()
+	assert.NoError(t, err)
+	defer testutils.RemoveTestFile(f)
+
+	m, err := New(f.Name(), 0, 10)
+	assert.Error(t, err)
+	assert.Nil(t, m)
 }
 
 func TestMonitor_Start(t *testing.T) {
