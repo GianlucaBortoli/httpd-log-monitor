@@ -1,25 +1,11 @@
 package topk
 
-import (
-	"fmt"
-
-	"github.com/wangjia184/sortedset"
-)
+import "github.com/wangjia184/sortedset"
 
 // TopK is an efficient data structure to store a scoreboard
 type TopK struct {
 	k         int
 	sortedSet *sortedset.SortedSet
-}
-
-// Item represents a data point for the TopK statistic
-type Item struct {
-	Key   string
-	Score int64
-}
-
-func (i *Item) String() string {
-	return fmt.Sprintf("key:%s, score:%d", i.Key, i.Score)
 }
 
 // New returns a new TopK metric

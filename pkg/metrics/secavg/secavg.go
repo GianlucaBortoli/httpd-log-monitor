@@ -42,3 +42,7 @@ func (s *SecAvg) Reset() {
 func (s *SecAvg) GetWindowSize() time.Duration {
 	return s.windowSize
 }
+
+func (s *SecAvg) GetCount() float64 {
+	return s.count
+}

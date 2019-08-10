@@ -1,4 +1,4 @@
-package stats
+package manager
 
 import (
 	"log"
@@ -7,8 +7,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cog-qlik/httpd-log-monitor/pkg/stats/secavg"
-	"github.com/cog-qlik/httpd-log-monitor/pkg/stats/topk"
+	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/alert"
+	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/secavg"
+	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/topk"
 )
 
 // Manager manages all the statistics computed from logs
@@ -25,17 +26,24 @@ type Manager struct {
 	// Req/sec metric
 	reqSec     *secavg.SecAvg
 	reqSecChan chan float64
+	// Req/sec alert
+	reqSecAlert *alert.Alert
 }
 
-// NewManager returns a new manager
-func NewManager(statsPeriod time.Duration, k int, l *log.Logger) (*Manager, error) {
+// New returns a new manager
+func New(alertPeriod, statsPeriod time.Duration, k int, threshold float64, l *log.Logger) (*Manager, error) {
 	if l == nil {
 		l = log.New(os.Stderr, "", log.LstdFlags)
 	}
 
-	r, err := secavg.New(statsPeriod)
-	if err != nil {
-		return nil, err
+	r, mErr := secavg.New(statsPeriod)
+	if mErr != nil {
+		return nil, mErr
+	}
+
+	a, aErr := alert.New(statsPeriod, alertPeriod, threshold, l)
+	if aErr != nil {
+		return nil, aErr
 	}
 
 	return &Manager{
@@ -46,6 +54,7 @@ func NewManager(statsPeriod time.Duration, k int, l *log.Logger) (*Manager, erro
 		sectionsChan:  make(chan *topk.Item),
 		reqSec:        r,
 		reqSecChan:    make(chan float64),
+		reqSecAlert:   a,
 	}, nil
 }
 
@@ -53,6 +62,7 @@ func NewManager(statsPeriod time.Duration, k int, l *log.Logger) (*Manager, erro
 func (m *Manager) Start() {
 	m.startOnce.Do(func() {
 		go m.loop()
+		m.reqSecAlert.Start()
 		atomic.StoreInt32(&m.started, 1)
 	})
 }
@@ -65,6 +75,7 @@ func (m *Manager) Stop() {
 	// Ensure signal on quitChan is sent only once
 	m.stopOnce.Do(func() {
 		m.quitChan <- struct{}{}
+		m.reqSecAlert.Stop()
 	})
 }
 
@@ -95,8 +106,9 @@ func (m *Manager) loop() {
 			if err := m.reqSec.IncrBy(c); err != nil {
 				m.log.Println("[ERROR]", err)
 			}
+			m.reqSecAlert.IncrBy(c)
 		case <-m.quitChan:
-			m.log.Println("[INFO] exiting stats manager")
+			m.log.Println("[INFO] exiting metrics manager event loop")
 			return
 		}
 	}

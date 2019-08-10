@@ -8,7 +8,7 @@ import (
 
 	"github.com/cog-qlik/httpd-log-monitor/internal/logparser"
 	"github.com/cog-qlik/httpd-log-monitor/internal/tailer"
-	"github.com/cog-qlik/httpd-log-monitor/pkg/stats"
+	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/manager"
 	"github.com/hpcloud/tail"
 )
 
@@ -16,17 +16,17 @@ import (
 type Monitor struct {
 	parser       *logparser.HTTPd
 	tailer       *tailer.Tailer
-	statsManager *stats.Manager
+	statsManager *manager.Manager
 	log          *log.Logger
 	quitChan     chan struct{}
 	startTime    time.Time
 }
 
 // New creates a monitor. Returns the monitor and an error
-func New(fileName string, statsPeriod time.Duration, statsTopK int) (*Monitor, error) {
+func New(fileName string, alertPeriod, statsPeriod time.Duration, k int, threshold float64) (*Monitor, error) {
 	l := log.New(os.Stderr, "", log.LstdFlags)
 
-	m, err := stats.NewManager(statsPeriod, statsTopK, l)
+	m, err := manager.New(alertPeriod, statsPeriod, k, threshold, l)
 	if err != nil {
 		return nil, err
 	}
