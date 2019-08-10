@@ -1,4 +1,4 @@
-package stats
+package metrics
 
 import (
 	"log"
@@ -7,8 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cog-qlik/httpd-log-monitor/pkg/stats/secavg"
-	"github.com/cog-qlik/httpd-log-monitor/pkg/stats/topk"
+	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/secavg"
+	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/topk"
 )
 
 // Manager manages all the statistics computed from logs
