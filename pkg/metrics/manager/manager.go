@@ -15,7 +15,6 @@ import (
 // Manager manages all the statistics computed from logs
 type Manager struct {
 	metricsTicker *time.Ticker
-	alertTicker   *time.Ticker
 	startOnce     sync.Once
 	stopOnce      sync.Once
 	log           *log.Logger
@@ -42,14 +41,13 @@ func New(alertPeriod, statsPeriod time.Duration, k int, threshold float64, l *lo
 		return nil, mErr
 	}
 
-	a, aErr := alert.New(statsPeriod, alertPeriod, threshold)
+	a, aErr := alert.New(statsPeriod, alertPeriod, threshold, l)
 	if aErr != nil {
 		return nil, aErr
 	}
 
 	return &Manager{
 		metricsTicker: time.NewTicker(statsPeriod),
-		alertTicker:   time.NewTicker(alertPeriod),
 		quitChan:      make(chan struct{}),
 		log:           l,
 		sectionsTopK:  topk.New(k),
@@ -64,6 +62,7 @@ func New(alertPeriod, statsPeriod time.Duration, k int, threshold float64, l *lo
 func (m *Manager) Start() {
 	m.startOnce.Do(func() {
 		go m.loop()
+		m.reqSecAlert.Start()
 		atomic.StoreInt32(&m.started, 1)
 	})
 }
@@ -76,6 +75,7 @@ func (m *Manager) Stop() {
 	// Ensure signal on quitChan is sent only once
 	m.stopOnce.Do(func() {
 		m.quitChan <- struct{}{}
+		m.reqSecAlert.Stop()
 	})
 }
 
@@ -95,8 +95,6 @@ func (m *Manager) ObserveRequest() {
 func (m *Manager) loop() {
 	for {
 		select {
-		case <-m.alertTicker.C:
-			m.reqSecAlert.Reset()
 		case <-m.metricsTicker.C:
 			m.printAllMetrics()
 			m.resetAllMetrics()
@@ -108,11 +106,7 @@ func (m *Manager) loop() {
 			if err := m.reqSec.IncrBy(c); err != nil {
 				m.log.Println("[ERROR]", err)
 			}
-			if err := m.reqSecAlert.IncrBy(c); err != nil {
-				m.log.Println("[ERROR]", err)
-			}
-		case msg := <-m.reqSecAlert.Alerts:
-			m.log.Println("[ALERT]", msg.String())
+			m.reqSecAlert.IncrBy(c)
 		case <-m.quitChan:
 			m.log.Println("[INFO] exiting metrics manager event loop")
 			return

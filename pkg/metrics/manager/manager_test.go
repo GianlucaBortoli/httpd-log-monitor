@@ -8,7 +8,7 @@ import (
 )
 
 func getTestManager() *Manager {
-	m, _ := New(50*time.Millisecond, 10, nil)
+	m, _ := New(50*time.Millisecond, 50*time.Millisecond, 10, 10, nil)
 	return m
 }
 
