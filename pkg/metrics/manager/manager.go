@@ -1,4 +1,4 @@
-package metrics
+package manager
 
 import (
 	"log"
@@ -27,8 +27,8 @@ type Manager struct {
 	reqSecChan chan float64
 }
 
-// NewManager returns a new manager
-func NewManager(statsPeriod time.Duration, k int, l *log.Logger) (*Manager, error) {
+// New returns a new manager
+func New(statsPeriod time.Duration, k int, l *log.Logger) (*Manager, error) {
 	if l == nil {
 		l = log.New(os.Stderr, "", log.LstdFlags)
 	}

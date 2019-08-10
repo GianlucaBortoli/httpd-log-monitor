@@ -1,4 +1,4 @@
-package metrics
+package manager
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 )
 
 func getTestManager() *Manager {
-	m, _ := NewManager(50*time.Millisecond, 10, nil)
+	m, _ := New(50*time.Millisecond, 10, nil)
 	return m
 }
 

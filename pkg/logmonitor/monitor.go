@@ -8,7 +8,7 @@ import (
 
 	"github.com/cog-qlik/httpd-log-monitor/internal/logparser"
 	"github.com/cog-qlik/httpd-log-monitor/internal/tailer"
-	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics"
+	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/manager"
 	"github.com/hpcloud/tail"
 )
 
@@ -16,7 +16,7 @@ import (
 type Monitor struct {
 	parser       *logparser.HTTPd
 	tailer       *tailer.Tailer
-	statsManager *metrics.Manager
+	statsManager *manager.Manager
 	log          *log.Logger
 	quitChan     chan struct{}
 	startTime    time.Time
@@ -26,7 +26,7 @@ type Monitor struct {
 func New(fileName string, statsPeriod time.Duration, statsTopK int) (*Monitor, error) {
 	l := log.New(os.Stderr, "", log.LstdFlags)
 
-	m, err := metrics.NewManager(statsPeriod, statsTopK, l)
+	m, err := manager.New(statsPeriod, statsTopK, l)
 	if err != nil {
 		return nil, err
 	}
