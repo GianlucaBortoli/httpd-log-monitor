@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/alert"
 	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/secavg"
 	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/topk"
 )
@@ -14,6 +15,7 @@ import (
 // Manager manages all the statistics computed from logs
 type Manager struct {
 	metricsTicker *time.Ticker
+	alertTicker   *time.Ticker
 	startOnce     sync.Once
 	stopOnce      sync.Once
 	log           *log.Logger
@@ -25,27 +27,36 @@ type Manager struct {
 	// Req/sec metric
 	reqSec     *secavg.SecAvg
 	reqSecChan chan float64
+	// Req/sec alert
+	reqSecAlert *alert.Alert
 }
 
 // New returns a new manager
-func New(statsPeriod time.Duration, k int, l *log.Logger) (*Manager, error) {
+func New(alertPeriod, statsPeriod time.Duration, k int, threshold float64, l *log.Logger) (*Manager, error) {
 	if l == nil {
 		l = log.New(os.Stderr, "", log.LstdFlags)
 	}
 
-	r, err := secavg.New(statsPeriod)
-	if err != nil {
-		return nil, err
+	r, mErr := secavg.New(statsPeriod)
+	if mErr != nil {
+		return nil, mErr
+	}
+
+	a, aErr := alert.New(statsPeriod, alertPeriod, threshold)
+	if aErr != nil {
+		return nil, aErr
 	}
 
 	return &Manager{
 		metricsTicker: time.NewTicker(statsPeriod),
+		alertTicker:   time.NewTicker(alertPeriod),
 		quitChan:      make(chan struct{}),
 		log:           l,
 		sectionsTopK:  topk.New(k),
 		sectionsChan:  make(chan *topk.Item),
 		reqSec:        r,
 		reqSecChan:    make(chan float64),
+		reqSecAlert:   a,
 	}, nil
 }
 
@@ -84,6 +95,8 @@ func (m *Manager) ObserveRequest() {
 func (m *Manager) loop() {
 	for {
 		select {
+		case <-m.alertTicker.C:
+			m.reqSecAlert.Reset()
 		case <-m.metricsTicker.C:
 			m.printAllMetrics()
 			m.resetAllMetrics()
@@ -95,8 +108,13 @@ func (m *Manager) loop() {
 			if err := m.reqSec.IncrBy(c); err != nil {
 				m.log.Println("[ERROR]", err)
 			}
+			if err := m.reqSecAlert.IncrBy(c); err != nil {
+				m.log.Println("[ERROR]", err)
+			}
+		case msg := <-m.reqSecAlert.Alerts:
+			m.log.Println("[ALERT]", msg.String())
 		case <-m.quitChan:
-			m.log.Println("[INFO] exiting stats manager")
+			m.log.Println("[INFO] exiting metrics manager event loop")
 			return
 		}
 	}

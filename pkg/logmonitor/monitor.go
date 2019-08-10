@@ -23,10 +23,10 @@ type Monitor struct {
 }
 
 // New creates a monitor. Returns the monitor and an error
-func New(fileName string, statsPeriod time.Duration, statsTopK int) (*Monitor, error) {
+func New(fileName string, alertPeriod, statsPeriod time.Duration, k int, threshold float64) (*Monitor, error) {
 	l := log.New(os.Stderr, "", log.LstdFlags)
 
-	m, err := manager.New(statsPeriod, statsTopK, l)
+	m, err := manager.New(alertPeriod, statsPeriod, k, threshold, l)
 	if err != nil {
 		return nil, err
 	}

@@ -84,20 +84,3 @@ func TestAlert_Reset(t *testing.T) {
 	a.Reset()
 	assert.Equal(t, float64(0), a.metric.GetCount())
 }
-
-func TestAlert_GetCurrAvgPerSec(t *testing.T) {
-	a, _ := New(time.Second, time.Hour, 100)
-
-	err := a.IncrBy(5)
-	assert.NoError(t, err)
-	avg := a.metric.GetAvgPerSec()
-	assert.Equal(t, float64(5), avg)
-
-	err = a.IncrBy(5)
-	assert.NoError(t, err)
-	avg = a.metric.GetAvgPerSec()
-	assert.Equal(t, float64(10), avg)
-
-	newAvg := a.getCurrAvgPerSec(10)
-	assert.Equal(t, float64(0.5), newAvg)
-}
