@@ -10,15 +10,15 @@ import (
 )
 
 type Alert struct {
-	loopTicker  *time.Ticker
-	resetTicker *time.Ticker
-	log         *log.Logger
-	metric      *secavg.SecAvg
-	threshold   float64
-	firing      bool
-	incrChan    chan float64
-	quitChan    chan struct{}
-	Alerts      chan *Msg
+	ticker    *time.Ticker
+	log       *log.Logger
+	metric    *secavg.SecAvg
+	threshold float64
+	firing    bool
+	started   bool
+	incrChan  chan float64
+	quitChan  chan struct{}
+	Alerts    chan *Msg
 }
 
 func New(statPeriod, alertPeriod time.Duration, threshold float64, l *log.Logger) (*Alert, error) {
@@ -35,37 +35,59 @@ func New(statPeriod, alertPeriod time.Duration, threshold float64, l *log.Logger
 	}
 
 	return &Alert{
-		loopTicker:  time.NewTicker(time.Second),
-		resetTicker: time.NewTicker(alertPeriod),
-		log:         l,
-		metric:      m,
-		threshold:   threshold,
-		incrChan:    make(chan float64),
-		quitChan:    make(chan struct{}),
-		Alerts:      make(chan *Msg, 100),
+		ticker:    time.NewTicker(alertPeriod),
+		log:       l,
+		metric:    m,
+		threshold: threshold,
+		incrChan:  make(chan float64),
+		quitChan:  make(chan struct{}),
+		Alerts:    make(chan *Msg, 100),
 	}, nil
 }
 
 func (a *Alert) Start() {
+	if a.started {
+		return
+	}
 	go a.loop()
+	a.started = true
 }
 
 func (a *Alert) Stop() {
+	if !a.started {
+		return
+	}
 	a.quitChan <- struct{}{}
+	a.started = false
 }
 
 func (a *Alert) IncrBy(i float64) {
+	if !a.started {
+		return
+	}
 	a.incrChan <- i
 }
 
-func (a *Alert) incrBy(i float64) error {
-	err := a.metric.IncrBy(i)
-	if err != nil {
-		return fmt.Errorf("cannot increment metric for alert: %v", err)
+func (a *Alert) loop() {
+	for {
+		select {
+		case <-a.ticker.C:
+			a.checkThreshold()
+			a.reset()
+		case msg := <-a.Alerts:
+			a.printAlert(msg)
+		case i := <-a.incrChan:
+			if err := a.incrBy(i); err != nil {
+				a.log.Println("[ERROR]", err)
+			}
+		case <-a.quitChan:
+			a.log.Println("[INFO] alert event loop exit")
+		}
 	}
+}
 
-	a.checkThreshold()
-	return nil
+func (a *Alert) incrBy(i float64) error {
+	return a.metric.IncrBy(i)
 }
 
 func (a *Alert) checkThreshold() {
@@ -89,25 +111,6 @@ func (a *Alert) checkThreshold() {
 	}
 }
 
-func (a *Alert) loop() {
-	for {
-		select {
-		case <-a.loopTicker.C:
-			a.checkThreshold()
-		case <-a.resetTicker.C:
-			a.reset()
-		case msg := <-a.Alerts:
-			a.printAlert(msg)
-		case i := <-a.incrChan:
-			if err := a.incrBy(i); err != nil {
-				a.log.Println("[ERROR]", err)
-			}
-		case <-a.quitChan:
-			a.log.Println("[INFO] alert event loop exit")
-		}
-	}
-}
-
 func (a *Alert) reset() {
 	a.metric.Reset()
 }
@@ -118,5 +121,7 @@ func (a *Alert) printAlert(msg *Msg) {
 		a.log.Println("[ALERT]", msg.String())
 	case Resolved:
 		a.log.Println("[RESOLVED]", msg.String())
+	default:
+		a.log.Println(msg.String())
 	}
 }

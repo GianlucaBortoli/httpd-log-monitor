@@ -35,29 +35,6 @@ func TestNew_WrongStatPeriod(t *testing.T) {
 	assert.Nil(t, a)
 }
 
-func TestAlert_IncrByWithAlert(t *testing.T) {
-	a, _ := New(50*time.Millisecond, 100*time.Millisecond, 1, nil)
-
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		// An alert message is expected since increment exceeds the
-		// alert threshold
-		msg := <-a.Alerts
-		fmt.Println(msg)
-		assert.NotEmpty(t, msg)
-	}()
-
-	// This should send a an alert message in the channel since the new average
-	// is over the threshold. The goroutine above ensures we get the message and
-	// we wait for it to return so we are sure the message has been received correctly
-	err := a.incrBy(10)
-	assert.NoError(t, err)
-	wg.Wait()
-}
-
 func TestAlert_IncrByNoAlert(t *testing.T) {
 	a, _ := New(time.Second, time.Hour, 100, nil)
 	// This should not send an alert message, so the function shouldn't block on
@@ -83,4 +60,69 @@ func TestAlert_Reset(t *testing.T) {
 
 	a.reset()
 	assert.Equal(t, float64(0), a.metric.GetCount())
+}
+
+func TestAlert_Start(t *testing.T) {
+	a := getTestAlert()
+	a.Start()
+	assert.True(t, a.started)
+}
+
+func TestAlert_StartMultiple(t *testing.T) {
+	a := getTestAlert()
+	a.Start()
+	a.Start()
+	a.Start()
+	a.Start()
+	a.Start()
+	assert.True(t, a.started)
+}
+
+func TestAlert_Stop(t *testing.T) {
+	a := getTestAlert()
+	a.Stop()
+}
+
+func TestAlert_StartAndStop(t *testing.T) {
+	a := getTestAlert()
+	a.Start()
+	assert.True(t, a.started)
+	a.Stop()
+	assert.False(t, a.started)
+}
+
+func TestAlert_IncrByStarted(t *testing.T) {
+	a := getTestAlert()
+	a.Start()
+	a.IncrBy(1)
+}
+
+func TestAlert_IncrByStopped(t *testing.T) {
+	a := getTestAlert()
+	a.IncrBy(1)
+}
+
+func TestAlert_checkThresholdWithAlerts(t *testing.T) {
+	a, _ := New(50*time.Millisecond, 100*time.Millisecond, 1, nil)
+	a.Start()
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		msg := <-a.Alerts
+
+		fmt.Println(msg)
+		assert.NotNil(t, msg)
+		assert.Equal(t, HighTraffic, msg.Type)
+
+		msg = <-a.Alerts
+		fmt.Println(msg)
+		assert.NotNil(t, msg)
+		assert.Equal(t, Resolved, msg.Type)
+	}()
+
+	a.IncrBy(10)
+	wg.Wait()
 }
