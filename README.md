@@ -19,6 +19,9 @@ $ make build
 The executable will be placed in `./bin` and has the race detector enabled.
 
 ## Unit tests
+One-line assertions in unit-tests are provided by https://github.com/stretchr/testify. It's a handy
+wrapper of the golang standard `testing` package.
+
 Unit tests can be run (with the race detector enabled) typing 
 ```bash
 $ make test
@@ -38,19 +41,19 @@ All the possible parameters can be found running the binary with the `-h` flag:
 $ ./bin/httpd-log-monitor -h
 Usage of ./bin/httpd-log-monitor:
   -alertPeriod duration
-    	The period for req/s alerting (default 2m0s)
+    	The length of the period for alerting on high traffic conditions (req/sec) (default 2m0s)
   -alertThreshold float
-    	The req/s alert threshold (default 10)
-  -file string
+    	The threshold for alerting about high traffic conditions (default 10)
+  -logFile string
     	The path to the log file (default "/tmp/access.log")
   -statsK int
-    	The maximum number of stats to output every period (default 5)
+    	The maximum number of values to output for topK metrics (ie. sections) (default 5)
   -statsPeriod duration
-    	The period for displaying stats (default 10s)
+    	The length of the period for displaying and computing stats (default 10s)
 ```
 
-If something wrong happens during the startup phase, the main binary exits with a `panic()` showing
-an error message. For example, this will happen if the log file doesn't exist.
+If something wrong happens during the startup phase, the main binary exits showing an error message.
+For example, this will happen if the log file doesn't exist.
 
 ## Design decisions
 Some design decisions and trade-offs have been made during the development of this tool.
