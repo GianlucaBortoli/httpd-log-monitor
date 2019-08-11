@@ -16,9 +16,10 @@ func New(k int) *TopK {
 	}
 }
 
-// IncrBy increments the score of item with key "key" of "incr".
-// If key doesn't exist in the SortedSet it creates a new item with key "key" and score "incr".
-// Inspired to https://redis.io/commands/zincrby
+// IncrBy increments the score of item with key "key" of "incr". If key doesn't exist in the
+// SortedSet it creates a new item with key "key" and score "incr".
+// The time complexity of this method is O(log({number of items in the SortedSet}))
+// Inspired to https://redis.io/commands/zincrby.
 func (t *TopK) IncrBy(i *Item) bool {
 	if i == nil {
 		return false
@@ -38,6 +39,7 @@ func (t *TopK) IncrBy(i *Item) bool {
 }
 
 // TopK returns at maximum "t.k" keys from the SortedSet
+// The time complexity of this method is O(K * log({number of items in the SortedSet}))
 func (t *TopK) TopK() []*Item {
 	var out []*Item
 	for i := 0; i < t.k; i++ {
@@ -65,6 +67,8 @@ func (t *TopK) GetCount() int {
 	return t.sortedSet.GetCount()
 }
 
+// addOrUpdate adds or updated key with score in the SortedSet.
+// The time complexity of this method is O(log({number of items in the SortedSet}))
 func (t *TopK) addOrUpdate(key string, score int64) bool {
 	return t.sortedSet.AddOrUpdate(key, (sortedset.SCORE)(score), score)
 }
