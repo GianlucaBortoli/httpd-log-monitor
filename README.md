@@ -49,6 +49,9 @@ Usage of ./bin/httpd-log-monitor:
     	The period for displaying stats (default 10s)
 ```
 
+If something wrong happens during the startup phase, the main binary exits with a `panic()` showing
+an error message. For example, this will happen if the log file doesn't exist.
+
 ## Design decisions
 Some design decisions and trade-offs have been made during the development of this tool.
 Here is a list of the main ones divided by topics.
