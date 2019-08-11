@@ -6,14 +6,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/secavg"
+	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/rate"
 )
 
 // Alert handles alerts for the per-second requests
 type Alert struct {
 	ticker    *time.Ticker
 	log       *log.Logger
-	metric    *secavg.SecAvg
+	metric    *rate.Rate
 	threshold float64
 	firing    bool
 	started   bool
@@ -31,7 +31,7 @@ func New(statPeriod, alertPeriod time.Duration, threshold float64, l *log.Logger
 		l = log.New(os.Stderr, "", log.LstdFlags)
 	}
 
-	m, err := secavg.New(statPeriod)
+	m, err := rate.New(statPeriod)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create alert: %v", err)
 	}
@@ -61,7 +61,7 @@ func (a *Alert) Stop() {
 	if !a.started {
 		return
 	}
-	a.quitChan <- struct{}{}
+	close(a.quitChan)
 	a.started = false
 }
 

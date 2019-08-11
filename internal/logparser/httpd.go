@@ -61,19 +61,23 @@ func (p *HTTPd) ParseLine(line string) (*Line, error) {
 
 // getSectionFromResource returns a section from a resource path.
 // A section is defined as being what's before the second '/' in the resource section.
-// Eg. the section for '/pages/create' is '/pages'
+// Eg. the section for '/pages/create' is '/pages'.
+// Returns an error if the path is the empty string
 func getSectionFromResource(path string) (string, error) {
 	parsed, err := url.Parse(path)
 	if err != nil {
 		return "", fmt.Errorf("cannot parse resource: %v", err)
 	}
 	if parsed.Path == "" {
-		return "", nil
+		return "", fmt.Errorf("cannot get section on empty string path")
 	}
 
-	split := strings.Split(parsed.Path, "/")
 	if !strings.HasPrefix(parsed.Path, "/") { // Reject paths that don't start with /
 		return "", fmt.Errorf("cannot get section from path %s", parsed.Path)
 	}
-	return "/" + split[1], nil
+	// Remove leading "/" since I'm sure it's there
+	stripped := strings.TrimLeft(parsed.Path, "/")
+	// Split on middle "/"s and take the first
+	split := strings.Split(stripped, "/")
+	return "/" + split[0], nil
 }

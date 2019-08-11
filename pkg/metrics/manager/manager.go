@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/alert"
-	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/secavg"
+	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/rate"
 	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/topk"
 )
 
@@ -24,7 +24,7 @@ type Manager struct {
 	sectionsTopK *topk.TopK
 	sectionsChan chan *topk.Item
 	// Req/sec metric
-	reqSec     *secavg.SecAvg
+	reqSec     *rate.Rate
 	reqSecChan chan float64
 	// Req/sec alert
 	reqSecAlert *alert.Alert
@@ -36,7 +36,7 @@ func New(alertPeriod, statsPeriod time.Duration, k int, threshold float64, l *lo
 		l = log.New(os.Stderr, "", log.LstdFlags)
 	}
 
-	r, mErr := secavg.New(statsPeriod)
+	r, mErr := rate.New(statsPeriod)
 	if mErr != nil {
 		return nil, mErr
 	}
@@ -72,9 +72,8 @@ func (m *Manager) Stop() {
 	if atomic.LoadInt32(&m.started) == 0 {
 		return
 	}
-	// Ensure signal on quitChan is sent only once
 	m.stopOnce.Do(func() {
-		m.quitChan <- struct{}{}
+		close(m.quitChan)
 		m.reqSecAlert.Stop()
 	})
 }

@@ -7,12 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNew(t *testing.T) {
-	p := New()
-	assert.NotNil(t, p)
-	assert.IsType(t, &HTTPd{}, p)
-}
-
 func TestHTTPd_ParseLine(t *testing.T) {
 	layout := "02/Jan/2006:15:04:05 -0700"
 	date := "09/May/2018:16:00:39 +0000"
@@ -24,7 +18,7 @@ func TestHTTPd_ParseLine(t *testing.T) {
 		shouldErr bool
 	}{
 		{
-			`127.0.0.1 asd james [` + date + `] "GET /report HTTP/1.0" 200 123`,
+			`127.0.0.1 asd james [09/May/2018:16:00:39 +0000] "GET /report HTTP/1.0" 200 123`,
 			&Line{
 				RemoteHost:    "127.0.0.1",
 				RemoteLogName: "asd",
@@ -39,7 +33,7 @@ func TestHTTPd_ParseLine(t *testing.T) {
 			false,
 		},
 		{
-			`127.0.0.1 - james [` + date + `] "GET /report HTTP/1.0" 200 123`,
+			`127.0.0.1 - james [09/May/2018:16:00:39 +0000] "GET /report HTTP/1.0" 200 123`,
 			&Line{
 				RemoteHost:    "127.0.0.1",
 				RemoteLogName: "-",
@@ -54,7 +48,7 @@ func TestHTTPd_ParseLine(t *testing.T) {
 			false,
 		},
 		{
-			`127.0.0.1 - james [` + date + `] "GET /report/foo/bar HTTP/1.0" 200 123`,
+			`127.0.0.1 - james [09/May/2018:16:00:39 +0000] "GET /report/foo/bar HTTP/1.0" 200 123`,
 			&Line{
 				RemoteHost:    "127.0.0.1",
 				RemoteLogName: "-",
@@ -69,7 +63,7 @@ func TestHTTPd_ParseLine(t *testing.T) {
 			false,
 		},
 		{
-			`127.0.0.1 - james [` + date + `] "GET http://example.com/report/foo/bar HTTP/1.0" 200 123`,
+			`127.0.0.1 - james [09/May/2018:16:00:39 +0000] "GET http://example.com/report/foo/bar HTTP/1.0" 200 123`,
 			&Line{
 				RemoteHost:    "127.0.0.1",
 				RemoteLogName: "-",
@@ -90,7 +84,7 @@ func TestHTTPd_ParseLine(t *testing.T) {
 		},
 		{
 			// Resource doesn't start with /
-			`127.0.0.1 - james [` + date + `] "GET report HTTP/1.0" 200 123`,
+			`127.0.0.1 - james [09/May/2018:16:00:39 +0000] "GET report HTTP/1.0" 200 123`,
 			nil,
 			true,
 		},
@@ -157,7 +151,7 @@ func TestGetSectionFromResource(t *testing.T) {
 		{
 			"",
 			"",
-			false,
+			true,
 		},
 		{
 			"foo",
@@ -202,7 +196,7 @@ func TestGetSectionFromResource(t *testing.T) {
 		{
 			"http://example.com",
 			"",
-			false,
+			true,
 		},
 	}
 

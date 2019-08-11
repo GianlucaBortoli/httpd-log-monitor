@@ -1,6 +1,7 @@
 package logmonitor
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -22,7 +23,7 @@ type Monitor struct {
 	startTime    time.Time
 }
 
-// New creates a monitor. Returns the monitor and an error
+// New creates a monitor
 func New(fileName string, alertPeriod, statsPeriod time.Duration, k int, threshold float64) (*Monitor, error) {
 	l := log.New(os.Stderr, "", log.LstdFlags)
 
@@ -58,15 +59,27 @@ func (m *Monitor) Stop() error {
 	if err := m.tailer.Stop(); err != nil {
 		return err
 	}
-	m.quitChan <- struct{}{}
+	close(m.quitChan)
 	m.statsManager.Stop()
 	return nil
 }
 
-// Wait blocks until the tailer goroutine is in a dead state.
-// Returns the reason for its death.
-func (m *Monitor) Wait() error {
-	return m.tailer.Wait()
+// Wait blocks until the tailer goroutine is in a dead state or the context timeout is
+// reached. Returns the reason for its death.
+// In case the context timeout is reached, the tailer may leak inotify watches in the Linux kernel.
+// See https://godoc.org/github.com/hpcloud/tail#Tail.Cleanup) for more information.
+func (m *Monitor) Wait(ctx context.Context) error {
+	waitErr := make(chan error)
+	go func() {
+		waitErr <- m.tailer.Wait()
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-waitErr:
+		return err
+	}
 }
 
 // startParsingTail is the loop where every log line is parsed and processed
@@ -74,12 +87,12 @@ func (m *Monitor) startParsingTail(lines <-chan *tail.Line) {
 	for {
 		select {
 		case l := <-lines:
-			good, err := m.filterLine(l)
+			logLine, err := m.checkLine(l)
 			if err != nil {
 				m.log.Println("[ERROR]", err)
 				continue
 			}
-			m.statsManager.ObserveSection(good.Section)
+			m.statsManager.ObserveSection(logLine.Section)
 			m.statsManager.ObserveRequest()
 		case <-m.quitChan:
 			m.log.Println("[INFO] exiting monitor")
@@ -88,7 +101,11 @@ func (m *Monitor) startParsingTail(lines <-chan *tail.Line) {
 	}
 }
 
-func (m *Monitor) filterLine(line *tail.Line) (*logparser.Line, error) {
+// checkLine ensures the input line (coming directly from the tailer) respects the layout defined
+// in https://www.w3.org/Daemon/User/Config/Logging.html#common-logfile-format.
+// It returns an error also in case log line contains a date preceding the time start time of the
+// monitor. This allows the caller to skip both malformed and old log lines.
+func (m *Monitor) checkLine(line *tail.Line) (*logparser.Line, error) {
 	if line == nil {
 		return nil, fmt.Errorf("nil line")
 	}
