@@ -60,7 +60,7 @@ Here is a list of the main ones divided by topics.
     * Accepted line format is defined [here](https://www.w3.org/Daemon/User/Config/Logging.html#common-logfile-format).
     Eg:<br>
     `127.0.0.1 - james [09/May/2018:16:00:39 +0000] "GET /report HTTP/1.0" 200 123`
-    * Malformed lines are gracefully handled and completely ignored.
+    * Malformed lines are gracefully handled but will be completely ignored.
 * Log file tail:
     * The date in the log line is used to skip old lines. This is important when the tool is run against
     a file that already has some content (eg. when the web server is already running). The tool starts
@@ -104,5 +104,4 @@ increases significantly.
 ## Known limitations
 The library used for tailing the log file (https://github.com/hpcloud/tail) has known problems under
 Windows (see [here](https://github.com/hpcloud/tail/labels/Windows)).
-This tool has been tested on Ubuntu Linux, but Max OSx should be fine as well.
-    
+This tool has been tested on Ubuntu Linux, but Apple's macOS should be fine as well.
