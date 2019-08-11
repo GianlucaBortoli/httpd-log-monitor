@@ -1,4 +1,4 @@
-package secavg
+package rate
 
 import (
 	"testing"
@@ -13,7 +13,6 @@ func TestNew(t *testing.T) {
 	assert.NotNil(t, a)
 	assert.Equal(t, float64(0), a.count)
 	assert.Equal(t, time.Second, a.windowSize)
-	assert.IsType(t, &Rate{}, a)
 }
 
 func TestNew_Err(t *testing.T) {

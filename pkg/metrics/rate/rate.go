@@ -1,4 +1,4 @@
-package secavg
+package rate
 
 import (
 	"fmt"

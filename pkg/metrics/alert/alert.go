@@ -5,13 +5,15 @@ import (
 	"log"
 	"os"
 	"time"
+
+	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/rate"
 )
 
 // Alert handles alerts for the per-second requests
 type Alert struct {
 	ticker    *time.Ticker
 	log       *log.Logger
-	metric    *rate.SecAvg
+	metric    *rate.Rate
 	threshold float64
 	firing    bool
 	started   bool

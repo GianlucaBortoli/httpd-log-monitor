@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/alert"
+	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/rate"
 	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/topk"
 )
 
@@ -23,7 +24,7 @@ type Manager struct {
 	sectionsTopK *topk.TopK
 	sectionsChan chan *topk.Item
 	// Req/sec metric
-	reqSec     *rate.SecAvg
+	reqSec     *rate.Rate
 	reqSecChan chan float64
 	// Req/sec alert
 	reqSecAlert *alert.Alert
