@@ -8,7 +8,7 @@ type TopK struct {
 	sortedSet *sortedset.SortedSet
 }
 
-// New returns a new TopK metric
+// New returns a new TopK metric. Cannot return nil
 func New(k int) *TopK {
 	return &TopK{
 		k:         k,
@@ -61,9 +61,9 @@ func (t *TopK) Reset() {
 	t.sortedSet = sortedset.New()
 }
 
-// GetCount returns the number of items in the SortedSet.
-// It's currently used in unit-tests only.
-func (t *TopK) GetCount() int {
+// Count returns the number of items in the SortedSet.
+// Used in unit tests only.
+func (t *TopK) Count() int {
 	return t.sortedSet.GetCount()
 }
 

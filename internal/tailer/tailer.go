@@ -14,7 +14,7 @@ type Tailer struct {
 	started  bool
 }
 
-// New returns a tailer for the given file
+// New returns a tailer for the given file. Cannot return nil.
 func New(fileName string) *Tailer {
 	return &Tailer{
 		fileName: fileName,

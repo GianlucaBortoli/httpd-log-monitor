@@ -6,24 +6,24 @@ import (
 )
 
 const (
-	HighTraffic = iota
-	Resolved
+	highTraffic = iota
+	resolved
 )
 
-type Msg struct {
+type msg struct {
 	Type  int
 	Value float64
 	When  time.Time
 }
 
-func (a *Msg) String() string {
+func (a *msg) String() string {
 	switch a.Type {
-	case HighTraffic:
+	case highTraffic:
 		return fmt.Sprintf(
 			"High traffic generated an alert - hits = %.2f, triggered at %s",
 			a.Value, a.When.Format(time.RFC3339),
 		)
-	case Resolved:
+	case resolved:
 		return fmt.Sprintf(
 			"High traffic alert resolved - hits = %.2f, triggered at %s",
 			a.Value, a.When.Format(time.RFC3339),

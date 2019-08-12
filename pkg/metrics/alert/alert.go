@@ -19,13 +19,13 @@ type Alert struct {
 	started   bool
 	incrChan  chan float64
 	quitChan  chan struct{}
-	Alerts    chan *Msg // Alerts are sent here
+	Alerts    chan *msg // Alerts are sent here
 }
 
 // New returns the alert manager with the specified metrics and alerting period and threshold
 func New(statPeriod, alertPeriod time.Duration, threshold float64, l *log.Logger) (*Alert, error) {
 	if alertPeriod == 0 {
-		return nil, fmt.Errorf("cannot create alert with period %d", alertPeriod)
+		return nil, fmt.Errorf("cannot create alert with time window of width 0")
 	}
 	if l == nil {
 		l = log.New(os.Stderr, "", log.LstdFlags)
@@ -33,7 +33,7 @@ func New(statPeriod, alertPeriod time.Duration, threshold float64, l *log.Logger
 
 	m, err := rate.New(statPeriod)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create alert: %v", err)
+		return nil, fmt.Errorf("cannot create rate metric for alert: %v", err)
 	}
 
 	return &Alert{
@@ -43,7 +43,7 @@ func New(statPeriod, alertPeriod time.Duration, threshold float64, l *log.Logger
 		threshold: threshold,
 		incrChan:  make(chan float64),
 		quitChan:  make(chan struct{}),
-		Alerts:    make(chan *Msg, 100),
+		Alerts:    make(chan *msg, 100),
 	}, nil
 }
 
@@ -78,11 +78,11 @@ func (a *Alert) loop() {
 		select {
 		case <-a.ticker.C:
 			a.checkThreshold()
-			a.reset()
+			a.metric.Reset()
 		case msg := <-a.Alerts:
-			a.printAlert(msg)
+			a.print(msg)
 		case i := <-a.incrChan:
-			if err := a.incrBy(i); err != nil {
+			if err := a.metric.IncrBy(i); err != nil {
 				a.log.Println("[ERROR]", err)
 			}
 		case <-a.quitChan:
@@ -94,39 +94,31 @@ func (a *Alert) loop() {
 // checkThreshold checks whether the current requests per second average is above
 // the threshold or not. Is also sends a message inside a.Alerts accordingly.
 func (a *Alert) checkThreshold() {
-	avg := a.metric.GetAvgPerSec()
+	avg := a.metric.AvgPerSec()
 
 	if !a.firing && avg >= a.threshold {
-		a.Alerts <- &Msg{
-			Type:  HighTraffic,
+		a.Alerts <- &msg{
+			Type:  highTraffic,
 			Value: avg,
 			When:  time.Now(),
 		}
-		a.firing = true // now the alert is firing
+		a.firing = true // alert firing
 	}
 	if a.firing && avg < a.threshold {
-		a.Alerts <- &Msg{
-			Type:  Resolved,
+		a.Alerts <- &msg{
+			Type:  resolved,
 			Value: avg,
 			When:  time.Now(),
 		}
-		a.firing = false // alert is resolved
+		a.firing = false // alert resolved
 	}
 }
 
-func (a *Alert) incrBy(i float64) error {
-	return a.metric.IncrBy(i)
-}
-
-func (a *Alert) reset() {
-	a.metric.Reset()
-}
-
-func (a *Alert) printAlert(msg *Msg) {
+func (a *Alert) print(msg *msg) {
 	switch msg.Type {
-	case HighTraffic:
+	case highTraffic:
 		a.log.Println("[ALERT]", msg.String())
-	case Resolved:
+	case resolved:
 		a.log.Println("[RESOLVED]", msg.String())
 	default:
 		a.log.Println(msg.String())

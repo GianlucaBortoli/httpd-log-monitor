@@ -22,7 +22,7 @@ func TestManager_ObserveSection(t *testing.T) {
 	m := getTestManager()
 	m.Start()
 
-	cnt := m.sectionsTopK.GetCount()
+	cnt := m.sectionsTopK.Count()
 	assert.Equal(t, 0, cnt)
 
 	m.ObserveSection("/foo")
@@ -44,7 +44,7 @@ func TestManager_ObserveUser(t *testing.T) {
 	m := getTestManager()
 	m.Start()
 
-	cnt := m.sectionsTopK.GetCount()
+	cnt := m.sectionsTopK.Count()
 	assert.Equal(t, 0, cnt)
 
 	m.ObserveUser("1")
@@ -65,7 +65,7 @@ func TestManager_ObserveRequest(t *testing.T) {
 	m := getTestManager()
 	m.Start()
 
-	cnt := m.sectionsTopK.GetCount()
+	cnt := m.sectionsTopK.Count()
 	assert.Equal(t, 0, cnt)
 
 	m.ObserveRequest()
@@ -85,7 +85,7 @@ func TestManager_ObserveStatusCode(t *testing.T) {
 	m := getTestManager()
 	m.Start()
 
-	cnt := m.sectionsTopK.GetCount()
+	cnt := m.sectionsTopK.Count()
 	assert.Equal(t, 0, cnt)
 
 	m.ObserveStatusCode(200)

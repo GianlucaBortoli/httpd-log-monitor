@@ -11,7 +11,7 @@ import (
 
 // HTTPd the apache httpd server log parser
 type HTTPd struct {
-	parser *axslogparser.Apache
+	*axslogparser.Apache
 }
 
 // Line represents the parsed log line.
@@ -29,7 +29,7 @@ type Line struct {
 	ContentLength int
 }
 
-// New returns an httpd log parser
+// New returns an httpd log parser. Cannot return nil
 func New() *HTTPd {
 	return &HTTPd{&axslogparser.Apache{}}
 }
@@ -37,7 +37,7 @@ func New() *HTTPd {
 // ParseLine takes a single log line and returns either its parsed version and an error
 // in case the line is malformed or misses some required field (eg. the date)
 func (p *HTTPd) ParseLine(line string) (*Line, error) {
-	l, err := p.parser.Parse(line)
+	l, err := p.Parse(line)
 	if err != nil {
 		return nil, err
 	}

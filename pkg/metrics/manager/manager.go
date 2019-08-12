@@ -13,7 +13,7 @@ import (
 	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/topk"
 )
 
-// Manager manages all the statistics computed from logs
+// Manager keeps track of all the statistics computed from logs
 type Manager struct {
 	metricsTicker *time.Ticker
 	startOnce     sync.Once
@@ -136,6 +136,8 @@ func (m *Manager) ObserveStatusCode(code int) {
 	m.statusCodesChan <- &topk.Item{Key: strconv.Itoa(code), Score: 1}
 }
 
+// loop funnels all the updates to all the metrics objects. This ensures that only one
+// goroutine at a time update the metric.
 func (m *Manager) loop() {
 	for {
 		select {
@@ -191,13 +193,13 @@ func (m *Manager) resetAllMetrics() {
 }
 
 func (m *Manager) printReqSec() {
-	reqSec := m.reqSec.GetAvgPerSec()
+	reqSec := m.reqSec.AvgPerSec()
 	period := m.reqSec.GetWindowSize().String()
 	m.log.Printf("%.2f req/s over last %s", reqSec, period)
 }
 
 func (m *Manager) printErrSec() {
-	errSec := m.errSec.GetAvgPerSec()
+	errSec := m.errSec.AvgPerSec()
 	period := m.errSec.GetWindowSize().String()
 	m.log.Printf("%.2f err/s over last %s", errSec, period)
 }

@@ -56,12 +56,12 @@ func TestAvg_Reset(t *testing.T) {
 	assert.Equal(t, float64(0), a.count)
 }
 
-func TestAvg_GetAvgPerSec(t *testing.T) {
+func TestAvg_AvgPerSec(t *testing.T) {
 	a, err := New(10 * time.Minute)
 	assert.NoError(t, err)
 
 	err = a.IncrBy(60)
 	assert.NoError(t, err)
-	avgPerSec := a.GetAvgPerSec()
+	avgPerSec := a.AvgPerSec()
 	assert.Equal(t, 0.1, avgPerSec)
 }
