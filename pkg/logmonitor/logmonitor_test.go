@@ -5,22 +5,22 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cog-qlik/httpd-log-monitor/internal/fileutils"
 	"github.com/cog-qlik/httpd-log-monitor/internal/logparser"
-	"github.com/cog-qlik/httpd-log-monitor/internal/testutils"
 	"github.com/hpcloud/tail"
 	"github.com/stretchr/testify/assert"
 )
 
 func getTestMonitor() (*Monitor, *os.File) {
-	f, _ := testutils.CreateTestFile()
+	f, _ := fileutils.CreateTestFile()
 	m, _ := New(f.Name(), 10*time.Second, 10*time.Second, 10, 10)
 	return m, f
 }
 
 func TestNew(t *testing.T) {
-	f, err := testutils.CreateTestFile()
+	f, err := fileutils.CreateTestFile()
 	assert.NoError(t, err)
-	defer testutils.RemoveTestFile(f)
+	defer fileutils.RemoveTestFile(f)
 
 	m, err := New(f.Name(), 10*time.Second, 10*time.Second, 10, 10)
 	assert.NoError(t, err)
@@ -29,9 +29,9 @@ func TestNew(t *testing.T) {
 }
 
 func TestNew_Err(t *testing.T) {
-	f, err := testutils.CreateTestFile()
+	f, err := fileutils.CreateTestFile()
 	assert.NoError(t, err)
-	defer testutils.RemoveTestFile(f)
+	defer fileutils.RemoveTestFile(f)
 
 	m, err := New(f.Name(), 0, 10*time.Second, 10, 10)
 	assert.Error(t, err)
@@ -40,7 +40,7 @@ func TestNew_Err(t *testing.T) {
 
 func TestMonitor_Start(t *testing.T) {
 	m, f := getTestMonitor()
-	defer testutils.RemoveTestFile(f)
+	defer fileutils.RemoveTestFile(f)
 
 	err := m.Start()
 	assert.NoError(t, err)
@@ -48,7 +48,7 @@ func TestMonitor_Start(t *testing.T) {
 
 func TestMonitor_StartWhenAlreadyStarted(t *testing.T) {
 	m, f := getTestMonitor()
-	defer testutils.RemoveTestFile(f)
+	defer fileutils.RemoveTestFile(f)
 
 	err := m.Start()
 	assert.NoError(t, err)
@@ -59,7 +59,7 @@ func TestMonitor_StartWhenAlreadyStarted(t *testing.T) {
 
 func TestMonitor_StartAndStop(t *testing.T) {
 	m, f := getTestMonitor()
-	defer testutils.RemoveTestFile(f)
+	defer fileutils.RemoveTestFile(f)
 
 	err := m.Start()
 	assert.NoError(t, err)
@@ -70,7 +70,7 @@ func TestMonitor_StartAndStop(t *testing.T) {
 
 func TestMonitor_StopWhenNotStarted(t *testing.T) {
 	m, f := getTestMonitor()
-	defer testutils.RemoveTestFile(f)
+	defer fileutils.RemoveTestFile(f)
 
 	err := m.Stop()
 	assert.Error(t, err)
@@ -78,7 +78,7 @@ func TestMonitor_StopWhenNotStarted(t *testing.T) {
 
 func TestMonitor_StartStopWait(t *testing.T) {
 	m, f := getTestMonitor()
-	defer testutils.RemoveTestFile(f)
+	defer fileutils.RemoveTestFile(f)
 
 	err := m.Start()
 	assert.NoError(t, err)
@@ -92,7 +92,7 @@ func TestMonitor_StartStopWait(t *testing.T) {
 
 func TestMonitor_WaitWhenNotStarted(t *testing.T) {
 	m, f := getTestMonitor()
-	defer testutils.RemoveTestFile(f)
+	defer fileutils.RemoveTestFile(f)
 
 	err := m.Wait()
 	assert.Error(t, err)

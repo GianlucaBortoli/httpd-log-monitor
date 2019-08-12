@@ -29,7 +29,7 @@ type Line struct {
 	ContentLength int
 }
 
-// New returns an httpd log parser
+// New returns an httpd log parser. Cannot return nil
 func New() *HTTPd {
 	return &HTTPd{&axslogparser.Apache{}}
 }

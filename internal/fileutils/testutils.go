@@ -1,5 +1,5 @@
-// package testutils contains some helper functions used in unit tests
-package testutils
+// package fileutils contains some helper functions used in unit tests
+package fileutils
 
 import (
 	"fmt"
@@ -7,10 +7,10 @@ import (
 	"os"
 )
 
-const fileName = "tailer-test-"
+const fileNamePrefix = "tailer-test-"
 
 func CreateTestFile() (*os.File, error) {
-	tmpFile, err := ioutil.TempFile(os.TempDir(), fileName)
+	tmpFile, err := ioutil.TempFile(os.TempDir(), fileNamePrefix)
 	if err != nil {
 		return nil, err
 	}
