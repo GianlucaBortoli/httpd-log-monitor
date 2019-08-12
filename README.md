@@ -57,6 +57,17 @@ Usage of ./bin/httpd-log-monitor:
 
 The process exits immediately with an error message if the log file doesn't exist.
 
+## Metrics
+The following metrics are collected from the log file:
+* Rate of requests: the number requests per second. It indicates the load the web server is facing.
+* Rate of errors: the number of status codes indicating an error. It indicates the health status of
+the content being served or the presence of misbehaving clients.<br>
+For example, a lot of `404`s can signal a wrong link in a web page or a web crawler that is scraping
+all possible paths for the web server.
+* TopK sections: the top `K` visited sections.
+* TopK status codes: the top `K` status codes returned.
+* TopK users: the top `K` users who did the request.
+
 ## Design decisions
 Some design decisions and trade-offs have been made during the development of this tool.
 Here is a list of the main ones divided by topics.
