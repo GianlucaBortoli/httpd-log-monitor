@@ -102,7 +102,7 @@ func (a *Alert) checkThreshold() {
 			Value: avg,
 			When:  time.Now(),
 		}
-		a.firing = true // now the alert is firing
+		a.firing = true // alert firing
 	}
 	if a.firing && avg < a.threshold {
 		a.Alerts <- &msg{
@@ -110,7 +110,7 @@ func (a *Alert) checkThreshold() {
 			Value: avg,
 			When:  time.Now(),
 		}
-		a.firing = false // alert is resolved
+		a.firing = false // alert resolved
 	}
 }
 
