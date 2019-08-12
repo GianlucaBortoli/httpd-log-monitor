@@ -3,14 +3,14 @@
 
 It appends log lines to the `/tmp/access.log` log file with the following layout:
 ```
-127.0.0.1 asd james [<date>] "GET <path> HTTP/1.0" <status_code> 123
+127.0.0.1 asd <user> [<date>] "GET <path> HTTP/1.0" <status_code> 123
 ```
 
 The templated fields are filled as follows:
 * `<date>` is always set to the time when the templated line is filled with data. This avoids appending
 lines with a date in the past that would be ignored by `httpd-log-monitor`.<br>
 The date layout is `02/Jan/2006:15:04:05 -0700`.
-* `<path>` and `<status_code>` are randomly chosen at every iteration from predefined sets of
+* `<user>`, `<path>` and `<status_code>` are randomly chosen at every iteration from predefined sets of
 possible values.
 
 ## Run
