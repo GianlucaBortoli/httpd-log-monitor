@@ -29,6 +29,9 @@ $ make test
 
 The overall code coverage is also outputted.
 
+## Manual tests
+Please refer to [this page](./loadgen/README.md).
+
 ## Run
 The `./bin/httpd-log-monitor` binary can be run without any further setting as follows:
 ```bash
@@ -52,8 +55,7 @@ Usage of ./bin/httpd-log-monitor:
     	The length of the period for displaying and computing stats (default 10s)
 ```
 
-If something wrong happens during the startup phase, the main binary exits showing an error message.
-For example, this will happen if the log file doesn't exist.
+The process exits immediately with an error message if the log file doesn't exist.
 
 ## Design decisions
 Some design decisions and trade-offs have been made during the development of this tool.
