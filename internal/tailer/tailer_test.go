@@ -11,9 +11,10 @@ import (
 
 func TestNew(t *testing.T) {
 	tailer := New("asd")
-	assert.Equal(t, true, tailer.tail.MustExist)
-	assert.Equal(t, true, tailer.tail.Follow)
-	assert.Equal(t, true, tailer.tail.ReOpen)
+	assert.Equal(t, "asd", tailer.fileName)
+	assert.Equal(t, true, tailer.tailConf.MustExist)
+	assert.Equal(t, true, tailer.tailConf.Follow)
+	assert.Equal(t, true, tailer.tailConf.ReOpen)
 }
 
 func TestTailer_Start(t *testing.T) {
