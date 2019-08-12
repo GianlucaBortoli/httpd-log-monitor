@@ -26,6 +26,9 @@ type Manager struct {
 	// Req/sec metric
 	reqSec     *rate.Rate
 	reqSecChan chan float64
+	// Err/sec metric
+	errSec     *rate.Rate
+	errSecChan chan float64
 	// Req/sec alert
 	reqSecAlert *alert.Alert
 }
@@ -36,9 +39,14 @@ func New(alertPeriod, statsPeriod time.Duration, k int, threshold float64, l *lo
 		l = log.New(os.Stderr, "", log.LstdFlags)
 	}
 
-	r, mErr := rate.New(statsPeriod)
+	reqSec, mErr := rate.New(statsPeriod)
 	if mErr != nil {
 		return nil, mErr
+	}
+
+	errSec, eErr := rate.New(statsPeriod)
+	if eErr != nil {
+		return nil, eErr
 	}
 
 	a, aErr := alert.New(statsPeriod, alertPeriod, threshold, l)
@@ -52,8 +60,10 @@ func New(alertPeriod, statsPeriod time.Duration, k int, threshold float64, l *lo
 		log:           l,
 		sectionsTopK:  topk.New(k),
 		sectionsChan:  make(chan *topk.Item),
-		reqSec:        r,
+		reqSec:        reqSec,
 		reqSecChan:    make(chan float64),
+		errSec:        errSec,
+		errSecChan:    make(chan float64),
 		reqSecAlert:   a,
 	}, nil
 }
@@ -86,9 +96,17 @@ func (m *Manager) ObserveSection(s string) {
 	m.sectionsChan <- &topk.Item{Key: s, Score: 1}
 }
 
-// ObserveRequest observe a data point for the requests per second statistic
+// ObserveRequest observes a data point for the requests per second statistic
 func (m *Manager) ObserveRequest() {
 	m.reqSecChan <- float64(1)
+}
+
+// ObserveError observes a data point for the errors per second statistic only if
+// the input status code is considered an error
+func (m *Manager) ObserveError(code int) {
+	if isErrorStatusCode(code) {
+		m.errSecChan <- float64(1)
+	}
 }
 
 func (m *Manager) loop() {
@@ -106,6 +124,10 @@ func (m *Manager) loop() {
 				m.log.Println("[ERROR]", err)
 			}
 			m.reqSecAlert.IncrBy(c)
+		case c := <-m.errSecChan:
+			if err := m.errSec.IncrBy(c); err != nil {
+				m.log.Println("[ERROR]", err)
+			}
 		case <-m.quitChan:
 			m.log.Println("[INFO] exiting metrics manager event loop")
 			return
@@ -116,6 +138,7 @@ func (m *Manager) loop() {
 func (m *Manager) printAllMetrics() {
 	m.log.Println("------------------------------")
 	m.printReqSec()
+	m.printErrSec()
 	m.printSections()
 }
 
@@ -125,9 +148,15 @@ func (m *Manager) resetAllMetrics() {
 }
 
 func (m *Manager) printReqSec() {
-	reqPerSec := m.reqSec.GetAvgPerSec()
+	reqSec := m.reqSec.GetAvgPerSec()
 	period := m.reqSec.GetWindowSize().String()
-	m.log.Printf("%.2f req/s over last %s", reqPerSec, period)
+	m.log.Printf("%.2f req/s over last %s", reqSec, period)
+}
+
+func (m *Manager) printErrSec() {
+	errSec := m.errSec.GetAvgPerSec()
+	period := m.errSec.GetWindowSize().String()
+	m.log.Printf("%.2f err/s over last %s", errSec, period)
 }
 
 func (m *Manager) printSections() {
@@ -139,4 +168,13 @@ func (m *Manager) printSections() {
 	for _, s := range sections {
 		m.log.Println(s.String())
 	}
+}
+
+// isErrorStatusCode returns false if the status code is between 200 (included) and 400 (excluded)
+// true otherwise
+func isErrorStatusCode(code int) bool {
+	if code >= 200 && code < 400 {
+		return false
+	}
+	return true
 }

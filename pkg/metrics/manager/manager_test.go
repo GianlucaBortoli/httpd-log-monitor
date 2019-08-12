@@ -76,3 +76,23 @@ func TestManager_printSections(t *testing.T) {
 	m := getTestManager()
 	m.printSections()
 }
+
+func TestIsErrorStatusCode(t *testing.T) {
+	testCases := []struct {
+		statusCode int
+		expIsError bool
+	}{
+		{100, true},
+		{199, true},
+		{200, false},
+		{300, false},
+		{399, false},
+		{400, true},
+		{500, true},
+	}
+
+	for _, tt := range testCases {
+		isErr := isErrorStatusCode(tt.statusCode)
+		assert.Equal(t, tt.expIsError, isErr)
+	}
+}

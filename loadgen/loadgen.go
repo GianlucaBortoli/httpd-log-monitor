@@ -10,7 +10,7 @@ import (
 
 var (
 	statusCodes = []int{
-		200, 404, 500, 302,
+		200, 302, 404, 500,
 	}
 
 	pages = []string{
