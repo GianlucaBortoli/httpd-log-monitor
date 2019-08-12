@@ -1,7 +1,6 @@
 package logmonitor
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -64,22 +63,12 @@ func (m *Monitor) Stop() error {
 	return nil
 }
 
-// Wait blocks until the tailer goroutine is in a dead state or the context timeout is
-// reached. Returns the reason for its death.
-// In case the context timeout is reached, the tailer may leak inotify watches in the Linux kernel.
-// See https://godoc.org/github.com/hpcloud/tail#Tail.Cleanup) for more information.
-func (m *Monitor) Wait(ctx context.Context) error {
-	waitErr := make(chan error)
-	go func() {
-		waitErr <- m.tailer.Wait()
-	}()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-waitErr:
-		return err
-	}
+// Wait blocks until the tailer goroutine is in a dead state. Returns the reason for its death.
+// If the main process is abruptly killed, this function never returns and the tailer may leak inotify
+// watches in the Linux kernel. See https://godoc.org/github.com/hpcloud/tail#Tail.Cleanup) for more
+// information.
+func (m *Monitor) Wait() error {
+	return m.tailer.Wait()
 }
 
 // startParsingTail is the loop where every log line is parsed and processed

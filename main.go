@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"log"
 	"time"
@@ -29,10 +28,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err = m.Wait(ctx); err != nil {
+	if err = m.Wait(); err != nil {
 		log.Fatal(err)
 	}
 }

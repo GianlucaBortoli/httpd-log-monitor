@@ -1,7 +1,6 @@
 package logmonitor
 
 import (
-	"context"
 	"os"
 	"testing"
 	"time"
@@ -87,9 +86,7 @@ func TestMonitor_StartStopWait(t *testing.T) {
 	err2 := m.Stop()
 	assert.NoError(t, err2)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	err3 := m.Wait(ctx)
+	err3 := m.Wait()
 	assert.NoError(t, err3)
 }
 
@@ -97,20 +94,8 @@ func TestMonitor_WaitWhenNotStarted(t *testing.T) {
 	m, f := getTestMonitor()
 	defer testutils.RemoveTestFile(f)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	err := m.Wait(ctx)
+	err := m.Wait()
 	assert.Error(t, err)
-}
-
-func TestMonitor_WaitContextDeadlineExceeded(t *testing.T) {
-	m, f := getTestMonitor()
-	defer testutils.RemoveTestFile(f)
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Nanosecond)
-	defer cancel()
-	err := m.Wait(ctx)
-	assert.Equal(t, context.DeadlineExceeded, err)
 }
 
 func TestMonitor_FilterLine(t *testing.T) {
