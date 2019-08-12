@@ -30,7 +30,7 @@ $ make test
 The overall code coverage is also outputted.
 
 ## Manual tests
-Please refer to [this page](./loadgen/README.md).
+Please refer to [this page](./loadgen/).
 
 ## Run
 The `./bin/httpd-log-monitor` binary can be run without any further setting as follows:
