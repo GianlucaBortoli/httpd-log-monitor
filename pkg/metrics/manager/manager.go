@@ -27,6 +27,9 @@ type Manager struct {
 	// TopK status codes
 	statusCodesTopK *topk.TopK
 	statusCodesChan chan *topk.Item
+	// TopK users
+	usersTopK *topk.TopK
+	usersChan chan *topk.Item
 	// Req/sec metric
 	reqSec     *rate.Rate
 	reqSecChan chan float64
@@ -66,6 +69,8 @@ func New(alertPeriod, statsPeriod time.Duration, k int, threshold float64, l *lo
 		sectionsChan:    make(chan *topk.Item),
 		statusCodesTopK: topk.New(k),
 		statusCodesChan: make(chan *topk.Item),
+		usersTopK:       topk.New(k),
+		usersChan:       make(chan *topk.Item),
 		reqSec:          reqSec,
 		reqSecChan:      make(chan float64),
 		errSec:          errSec,
@@ -94,7 +99,7 @@ func (m *Manager) Stop() {
 	})
 }
 
-// ObserveSection observe a data point for the sections TopK statistic
+// ObserveSection observes a data point for the sections TopK statistic
 func (m *Manager) ObserveSection(s string) {
 	if atomic.LoadInt32(&m.started) == 0 {
 		return
@@ -102,14 +107,29 @@ func (m *Manager) ObserveSection(s string) {
 	m.sectionsChan <- &topk.Item{Key: s, Score: 1}
 }
 
+// ObserveUser observes a data point for the users TopK statistic
+func (m *Manager) ObserveUser(s string) {
+	if atomic.LoadInt32(&m.started) == 0 {
+		return
+	}
+	m.usersChan <- &topk.Item{Key: s, Score: 1}
+}
+
 // ObserveRequest observes a data point for the requests per second statistic
 func (m *Manager) ObserveRequest() {
+	if atomic.LoadInt32(&m.started) == 0 {
+		return
+	}
 	m.reqSecChan <- float64(1)
 }
 
 // ObserveStatusCode observes a data point for the errors per second statistic only if
 // the input status code is considered an error
 func (m *Manager) ObserveStatusCode(code int) {
+	if atomic.LoadInt32(&m.started) == 0 {
+		return
+	}
+
 	if isErrorStatusCode(code) {
 		m.errSecChan <- float64(1)
 	}
@@ -125,6 +145,10 @@ func (m *Manager) loop() {
 		case i := <-m.sectionsChan:
 			if ok := m.sectionsTopK.IncrBy(i); !ok {
 				m.log.Printf("[ERROR] cannot incremet key %s by %d\n", i.Key, i.Score)
+			}
+		case u := <-m.usersChan:
+			if ok := m.usersTopK.IncrBy(u); !ok {
+				m.log.Printf("[ERROR] cannot incremet key %s by %d\n", u.Key, u.Score)
 			}
 		case c := <-m.statusCodesChan:
 			if ok := m.statusCodesTopK.IncrBy(c); !ok {
@@ -154,6 +178,8 @@ func (m *Manager) printAllMetrics() {
 	m.printTopK(m.sectionsTopK)
 	m.log.Println("TopK status codes:")
 	m.printTopK(m.statusCodesTopK)
+	m.log.Println("TopK users:")
+	m.printTopK(m.usersTopK)
 }
 
 func (m *Manager) resetAllMetrics() {
@@ -161,6 +187,7 @@ func (m *Manager) resetAllMetrics() {
 	m.errSec.Reset()
 	m.sectionsTopK.Reset()
 	m.statusCodesTopK.Reset()
+	m.usersTopK.Reset()
 }
 
 func (m *Manager) printReqSec() {
