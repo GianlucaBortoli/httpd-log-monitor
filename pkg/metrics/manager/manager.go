@@ -3,6 +3,7 @@ package manager
 import (
 	"log"
 	"os"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -23,6 +24,9 @@ type Manager struct {
 	// TopK sections metric
 	sectionsTopK *topk.TopK
 	sectionsChan chan *topk.Item
+	// TopK status codes
+	statusCodesTopK *topk.TopK
+	statusCodesChan chan *topk.Item
 	// Req/sec metric
 	reqSec     *rate.Rate
 	reqSecChan chan float64
@@ -55,16 +59,18 @@ func New(alertPeriod, statsPeriod time.Duration, k int, threshold float64, l *lo
 	}
 
 	return &Manager{
-		metricsTicker: time.NewTicker(statsPeriod),
-		quitChan:      make(chan struct{}),
-		log:           l,
-		sectionsTopK:  topk.New(k),
-		sectionsChan:  make(chan *topk.Item),
-		reqSec:        reqSec,
-		reqSecChan:    make(chan float64),
-		errSec:        errSec,
-		errSecChan:    make(chan float64),
-		reqSecAlert:   a,
+		metricsTicker:   time.NewTicker(statsPeriod),
+		quitChan:        make(chan struct{}),
+		log:             l,
+		sectionsTopK:    topk.New(k),
+		sectionsChan:    make(chan *topk.Item),
+		statusCodesTopK: topk.New(k),
+		statusCodesChan: make(chan *topk.Item),
+		reqSec:          reqSec,
+		reqSecChan:      make(chan float64),
+		errSec:          errSec,
+		errSecChan:      make(chan float64),
+		reqSecAlert:     a,
 	}, nil
 }
 
@@ -101,12 +107,13 @@ func (m *Manager) ObserveRequest() {
 	m.reqSecChan <- float64(1)
 }
 
-// ObserveError observes a data point for the errors per second statistic only if
+// ObserveStatusCode observes a data point for the errors per second statistic only if
 // the input status code is considered an error
-func (m *Manager) ObserveError(code int) {
+func (m *Manager) ObserveStatusCode(code int) {
 	if isErrorStatusCode(code) {
 		m.errSecChan <- float64(1)
 	}
+	m.statusCodesChan <- &topk.Item{Key: strconv.Itoa(code), Score: 1}
 }
 
 func (m *Manager) loop() {
@@ -118,6 +125,10 @@ func (m *Manager) loop() {
 		case i := <-m.sectionsChan:
 			if ok := m.sectionsTopK.IncrBy(i); !ok {
 				m.log.Printf("[ERROR] cannot incremet key %s by %d\n", i.Key, i.Score)
+			}
+		case c := <-m.statusCodesChan:
+			if ok := m.statusCodesTopK.IncrBy(c); !ok {
+				m.log.Printf("[ERROR] cannot incremet key %s by %d\n", c.Key, c.Score)
 			}
 		case c := <-m.reqSecChan:
 			if err := m.reqSec.IncrBy(c); err != nil {
@@ -136,15 +147,20 @@ func (m *Manager) loop() {
 }
 
 func (m *Manager) printAllMetrics() {
-	m.log.Println("------------------------------")
+	m.log.Println("------------------------------------------")
 	m.printReqSec()
 	m.printErrSec()
-	m.printSections()
+	m.log.Println("TopK sections:")
+	m.printTopK(m.sectionsTopK)
+	m.log.Println("TopK status codes:")
+	m.printTopK(m.statusCodesTopK)
 }
 
 func (m *Manager) resetAllMetrics() {
 	m.reqSec.Reset()
+	m.errSec.Reset()
 	m.sectionsTopK.Reset()
+	m.statusCodesTopK.Reset()
 }
 
 func (m *Manager) printReqSec() {
@@ -159,13 +175,12 @@ func (m *Manager) printErrSec() {
 	m.log.Printf("%.2f err/s over last %s", errSec, period)
 }
 
-func (m *Manager) printSections() {
-	sections := m.sectionsTopK.TopK()
-	if len(sections) == 0 {
-		m.log.Println("no sections in the last period")
+func (m *Manager) printTopK(k *topk.TopK) {
+	topK := k.TopK()
+	if len(topK) == 0 {
 		return
 	}
-	for _, s := range sections {
+	for _, s := range topK {
 		m.log.Println(s.String())
 	}
 }

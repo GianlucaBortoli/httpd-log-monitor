@@ -83,7 +83,7 @@ func (m *Monitor) startParsingTail(lines <-chan *tail.Line) {
 			}
 			m.statsManager.ObserveSection(logLine.Section)
 			m.statsManager.ObserveRequest()
-			m.statsManager.ObserveError(logLine.StatusCode)
+			m.statsManager.ObserveStatusCode(logLine.StatusCode)
 		case <-m.quitChan:
 			m.log.Println("[INFO] exiting monitor")
 			return

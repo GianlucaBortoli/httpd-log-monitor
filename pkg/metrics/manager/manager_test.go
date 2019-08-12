@@ -74,7 +74,7 @@ func TestManager_StopNotStarted(t *testing.T) {
 
 func TestManager_printSections(t *testing.T) {
 	m := getTestManager()
-	m.printSections()
+	m.printTopK()
 }
 
 func TestIsErrorStatusCode(t *testing.T) {
