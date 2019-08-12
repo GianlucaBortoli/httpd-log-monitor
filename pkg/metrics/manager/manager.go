@@ -13,7 +13,7 @@ import (
 	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/topk"
 )
 
-// Manager manages all the statistics computed from logs
+// Manager keeps track of all the statistics computed from logs
 type Manager struct {
 	metricsTicker *time.Ticker
 	startOnce     sync.Once
@@ -136,6 +136,8 @@ func (m *Manager) ObserveStatusCode(code int) {
 	m.statusCodesChan <- &topk.Item{Key: strconv.Itoa(code), Score: 1}
 }
 
+// loop funnels all the updates to all the metrics objects. This ensures that only one
+// goroutine at a time update the metric.
 func (m *Manager) loop() {
 	for {
 		select {

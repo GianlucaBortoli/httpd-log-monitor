@@ -71,7 +71,8 @@ func (m *Monitor) Wait() error {
 	return m.tailer.Wait()
 }
 
-// startParsingTail is the loop where every log line is parsed and processed
+// startParsingTail is the loop where every log line is parsed, processed and new data point
+// for the statistics are observed.
 func (m *Monitor) startParsingTail(lines <-chan *tail.Line) {
 	for {
 		select {

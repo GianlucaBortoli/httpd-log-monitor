@@ -8,7 +8,7 @@ type TopK struct {
 	sortedSet *sortedset.SortedSet
 }
 
-// New returns a new TopK metric
+// New returns a new TopK metric. Cannot return nil
 func New(k int) *TopK {
 	return &TopK{
 		k:         k,
