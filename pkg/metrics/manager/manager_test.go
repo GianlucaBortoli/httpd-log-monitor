@@ -18,11 +18,6 @@ func TestNewManager(t *testing.T) {
 	assert.IsType(t, &Manager{}, m)
 }
 
-func TestManager_ObserveSectionNotStarted(t *testing.T) {
-	m := getTestManager()
-	m.ObserveSection("/foo")
-}
-
 func TestManager_ObserveSection(t *testing.T) {
 	m := getTestManager()
 	m.Start()
@@ -38,6 +33,72 @@ func TestManager_ObserveSection(t *testing.T) {
 	m.ObserveSection("/baz")
 	// Give ticker some time to fire so I see console output
 	time.Sleep(70 * time.Millisecond)
+}
+
+func TestManager_ObserveSectionNotStarted(t *testing.T) {
+	m := getTestManager()
+	m.ObserveSection("/foo")
+}
+
+func TestManager_ObserveUser(t *testing.T) {
+	m := getTestManager()
+	m.Start()
+
+	cnt := m.sectionsTopK.GetCount()
+	assert.Equal(t, 0, cnt)
+
+	m.ObserveUser("1")
+	m.ObserveUser("2")
+	m.ObserveUser("3")
+	m.ObserveUser("2")
+	m.ObserveUser("2")
+	// Give ticker some time to fire so I see console output
+	time.Sleep(70 * time.Millisecond)
+}
+
+func TestManager_ObserveUserNotStarted(t *testing.T) {
+	m := getTestManager()
+	m.ObserveUser("1")
+}
+
+func TestManager_ObserveRequest(t *testing.T) {
+	m := getTestManager()
+	m.Start()
+
+	cnt := m.sectionsTopK.GetCount()
+	assert.Equal(t, 0, cnt)
+
+	m.ObserveRequest()
+	m.ObserveRequest()
+	m.ObserveRequest()
+	m.ObserveRequest()
+	// Give ticker some time to fire so I see console output
+	time.Sleep(70 * time.Millisecond)
+}
+
+func TestManager_ObserveRequestNotStarted(t *testing.T) {
+	m := getTestManager()
+	m.ObserveRequest()
+}
+
+func TestManager_ObserveStatusCode(t *testing.T) {
+	m := getTestManager()
+	m.Start()
+
+	cnt := m.sectionsTopK.GetCount()
+	assert.Equal(t, 0, cnt)
+
+	m.ObserveStatusCode(200)
+	m.ObserveStatusCode(300)
+	m.ObserveStatusCode(400)
+	m.ObserveStatusCode(500)
+	// Give ticker some time to fire so I see console output
+	time.Sleep(70 * time.Millisecond)
+}
+
+func TestManager_ObserveStatusCodeNotStarted(t *testing.T) {
+	m := getTestManager()
+	m.ObserveStatusCode(1)
 }
 
 func TestManager_Start(t *testing.T) {
@@ -72,7 +133,27 @@ func TestManager_StopNotStarted(t *testing.T) {
 	m.Stop()
 }
 
-func TestManager_printSections(t *testing.T) {
+func TestManager_printTopK(t *testing.T) {
 	m := getTestManager()
-	m.printSections()
+	m.printTopK(m.sectionsTopK)
+}
+
+func TestIsErrorStatusCode(t *testing.T) {
+	testCases := []struct {
+		statusCode int
+		expIsError bool
+	}{
+		{100, true},
+		{199, true},
+		{200, false},
+		{300, false},
+		{399, false},
+		{400, true},
+		{500, true},
+	}
+
+	for _, tt := range testCases {
+		isErr := isErrorStatusCode(tt.statusCode)
+		assert.Equal(t, tt.expIsError, isErr)
+	}
 }

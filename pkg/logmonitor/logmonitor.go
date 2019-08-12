@@ -83,6 +83,8 @@ func (m *Monitor) startParsingTail(lines <-chan *tail.Line) {
 			}
 			m.statsManager.ObserveSection(logLine.Section)
 			m.statsManager.ObserveRequest()
+			m.statsManager.ObserveStatusCode(logLine.StatusCode)
+			m.statsManager.ObserveUser(logLine.User)
 		case <-m.quitChan:
 			m.log.Println("[INFO] exiting monitor")
 			return
@@ -111,6 +113,7 @@ func (m *Monitor) checkLine(line *tail.Line) (*logparser.Line, error) {
 	return parsedLine, nil
 }
 
+// isOldLine returns false if the date in the log line is after the monitor's start time true otherwise
 func (m *Monitor) isOldLine(line *logparser.Line) bool {
 	if line == nil {
 		return true

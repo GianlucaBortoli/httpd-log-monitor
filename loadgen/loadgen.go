@@ -9,8 +9,12 @@ import (
 )
 
 var (
+	users = []string{
+		"user1", "user2", "user3", "user4",
+	}
+
 	statusCodes = []int{
-		200, 404, 500, 302,
+		200, 302, 404, 500,
 	}
 
 	pages = []string{
@@ -21,6 +25,11 @@ var (
 func randomStatusCode() int {
 	c := rand.Int() % len(statusCodes)
 	return statusCodes[c]
+}
+
+func randomUser() string {
+	p := rand.Int() % len(users)
+	return users[p]
 }
 
 func randomPage() string {
@@ -39,11 +48,11 @@ func main() {
 
 	// Example of valid log lime
 	// `127.0.0.1 asd james [09/May/2018:16:00:39 +0000] "GET /report HTTP/1.0" 200 123`
-	lineTpl := `127.0.0.1 asd james [%s] "GET %s HTTP/1.0" %d 123`
+	lineTpl := `127.0.0.1 asd %s [%s] "GET %s HTTP/1.0" %d 123`
 
 	for {
 		now := time.Now().Format("02/Jan/2006:15:04:05 -0700")
-		_, err = fmt.Fprintf(f, lineTpl+"\n", now, randomPage(), randomStatusCode())
+		_, err = fmt.Fprintf(f, lineTpl+"\n", randomUser(), now, randomPage(), randomStatusCode())
 		if err != nil {
 			log.Fatal(f)
 		}
