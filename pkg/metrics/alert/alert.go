@@ -25,7 +25,7 @@ type Alert struct {
 // New returns the alert manager with the specified metrics and alerting period and threshold
 func New(statPeriod, alertPeriod time.Duration, threshold float64, l *log.Logger) (*Alert, error) {
 	if alertPeriod == 0 {
-		return nil, fmt.Errorf("cannot create alert with period %d", alertPeriod)
+		return nil, fmt.Errorf("cannot create alert with time window of width 0")
 	}
 	if l == nil {
 		l = log.New(os.Stderr, "", log.LstdFlags)
@@ -33,7 +33,7 @@ func New(statPeriod, alertPeriod time.Duration, threshold float64, l *log.Logger
 
 	m, err := rate.New(statPeriod)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create alert: %v", err)
+		return nil, fmt.Errorf("cannot create rate metric for alert: %v", err)
 	}
 
 	return &Alert{
@@ -78,11 +78,11 @@ func (a *Alert) loop() {
 		select {
 		case <-a.ticker.C:
 			a.checkThreshold()
-			a.reset()
+			a.metric.Reset()
 		case msg := <-a.Alerts:
 			a.print(msg)
 		case i := <-a.incrChan:
-			if err := a.incrBy(i); err != nil {
+			if err := a.metric.IncrBy(i); err != nil {
 				a.log.Println("[ERROR]", err)
 			}
 		case <-a.quitChan:
@@ -112,14 +112,6 @@ func (a *Alert) checkThreshold() {
 		}
 		a.firing = false // alert resolved
 	}
-}
-
-func (a *Alert) incrBy(i float64) error {
-	return a.metric.IncrBy(i)
-}
-
-func (a *Alert) reset() {
-	a.metric.Reset()
 }
 
 func (a *Alert) print(msg *msg) {

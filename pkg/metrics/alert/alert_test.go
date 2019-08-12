@@ -41,14 +41,8 @@ func TestAlert_IncrByNoAlert(t *testing.T) {
 	// sending the message on te channel.
 	// Hence, if the tests exits it means that no message has been sent in the channel
 	// since there's nothing reading from it.
-	err := a.incrBy(1)
+	err := a.metric.IncrBy(1)
 	assert.NoError(t, err)
-}
-
-func TestAlert_IncrByErr(t *testing.T) {
-	a := getTestAlert()
-	err := a.incrBy(-100)
-	assert.Error(t, err)
 }
 
 func TestAlert_Reset(t *testing.T) {
@@ -58,7 +52,7 @@ func TestAlert_Reset(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, float64(10), a.metric.Count())
 
-	a.reset()
+	a.metric.Reset()
 	assert.Equal(t, float64(0), a.metric.Count())
 }
 
