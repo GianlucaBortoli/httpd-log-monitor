@@ -94,7 +94,7 @@ func (a *Alert) loop() {
 // checkThreshold checks whether the current requests per second average is above
 // the threshold or not. Is also sends a message inside a.Alerts accordingly.
 func (a *Alert) checkThreshold() {
-	avg := a.metric.GetAvgPerSec()
+	avg := a.metric.AvgPerSec()
 
 	if !a.firing && avg >= a.threshold {
 		a.Alerts <- &Msg{

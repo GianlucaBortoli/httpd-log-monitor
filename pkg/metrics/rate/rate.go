@@ -29,8 +29,8 @@ func (r *Rate) IncrBy(i float64) error {
 	return nil
 }
 
-// GetAvgPerSec returns the per-second average of counter over the windowSize
-func (r *Rate) GetAvgPerSec() float64 {
+// AvgPerSec returns the per-second average of counter over the windowSize
+func (r *Rate) AvgPerSec() float64 {
 	return r.count / r.windowSize.Seconds()
 }
 
@@ -43,6 +43,8 @@ func (r *Rate) GetWindowSize() time.Duration {
 	return r.windowSize
 }
 
-func (r *Rate) GetCount() float64 {
+// Count returns the number of observations in the time window.
+// Used in unit tests only.
+func (r *Rate) Count() float64 {
 	return r.count
 }

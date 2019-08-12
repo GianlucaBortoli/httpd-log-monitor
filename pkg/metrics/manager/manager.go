@@ -191,13 +191,13 @@ func (m *Manager) resetAllMetrics() {
 }
 
 func (m *Manager) printReqSec() {
-	reqSec := m.reqSec.GetAvgPerSec()
+	reqSec := m.reqSec.AvgPerSec()
 	period := m.reqSec.GetWindowSize().String()
 	m.log.Printf("%.2f req/s over last %s", reqSec, period)
 }
 
 func (m *Manager) printErrSec() {
-	errSec := m.errSec.GetAvgPerSec()
+	errSec := m.errSec.AvgPerSec()
 	period := m.errSec.GetWindowSize().String()
 	m.log.Printf("%.2f err/s over last %s", errSec, period)
 }

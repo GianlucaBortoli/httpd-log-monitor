@@ -56,10 +56,10 @@ func TestAlert_Reset(t *testing.T) {
 
 	err := a.metric.IncrBy(10)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(10), a.metric.GetCount())
+	assert.Equal(t, float64(10), a.metric.Count())
 
 	a.reset()
-	assert.Equal(t, float64(0), a.metric.GetCount())
+	assert.Equal(t, float64(0), a.metric.Count())
 }
 
 func TestAlert_Start(t *testing.T) {
