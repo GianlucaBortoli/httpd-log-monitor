@@ -115,12 +115,12 @@ func TestAlert_checkThresholdWithAlerts(t *testing.T) {
 
 		fmt.Println(msg)
 		assert.NotNil(t, msg)
-		assert.Equal(t, HighTraffic, msg.Type)
+		assert.Equal(t, highTraffic, msg.Type)
 
 		msg = <-a.Alerts
 		fmt.Println(msg)
 		assert.NotNil(t, msg)
-		assert.Equal(t, Resolved, msg.Type)
+		assert.Equal(t, resolved, msg.Type)
 	}()
 
 	a.IncrBy(10)
