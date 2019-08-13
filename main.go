@@ -11,7 +11,7 @@ import (
 var (
 	logFile        = flag.String("logFile", "/tmp/access.log", "The path to the log file")
 	statsPeriod    = flag.Duration("statsPeriod", 10*time.Second, "The length of the period for displaying and computing stats")
-	statsK         = flag.Int("statsK", 5, "The maximum number of values to output for topK metrics (ie. sections)")
+	statsK         = flag.Int("statsK", 5, "The maximum number of values to output for topK metrics (eg. sections)")
 	alertPeriod    = flag.Duration("alertPeriod", 2*time.Minute, "The length of the period for alerting on high traffic conditions (req/sec)")
 	alertThreshold = flag.Float64("alertThreshold", 10, "The threshold for alerting about high traffic conditions")
 )
