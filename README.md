@@ -50,7 +50,7 @@ Usage of ./bin/httpd-log-monitor:
   -logFile string
     	The path to the log file (default "/tmp/access.log")
   -statsK int
-    	The maximum number of values to output for topK metrics (ie. sections) (default 5)
+    	The maximum number of values to output for topK metrics (eg. sections) (default 5)
   -statsPeriod duration
     	The length of the period for displaying and computing stats (default 10s)
 ```
