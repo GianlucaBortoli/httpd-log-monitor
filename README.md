@@ -44,15 +44,15 @@ All the possible parameters can be found running the binary with the `-h` flag:
 $ ./bin/httpd-log-monitor -h
 Usage of ./bin/httpd-log-monitor:
   -alertPeriod duration
-    	The length of the period for alerting on high traffic conditions (req/sec) (default 2m0s)
+    	The length of the period for computing the request rate metric used for alerting about high traffic conditions (default 2m0s)
   -alertThreshold float
-    	The threshold for alerting about high traffic conditions (default 10)
+    	The threshold on the request rate metric for alerting about high traffic conditions (default 10)
   -logFile string
     	The path to the log file (default "/tmp/access.log")
   -statsK int
-    	The maximum number of values to output for topK metrics (eg. sections) (default 5)
+    	The maximum number of values to output when displaying topK metrics (eg. sections) (default 5)
   -statsPeriod duration
-    	The length of the period for displaying and computing stats (default 10s)
+    	The length of the period for computing all the metrics and displaying them on the console (default 10s)
 ```
 
 The process exits immediately with an error message if the log file doesn't exist.
