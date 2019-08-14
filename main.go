@@ -10,10 +10,10 @@ import (
 
 var (
 	logFile        = flag.String("logFile", "/tmp/access.log", "The path to the log file")
-	statsPeriod    = flag.Duration("statsPeriod", 10*time.Second, "The length of the period for displaying and computing stats")
-	statsK         = flag.Int("statsK", 5, "The maximum number of values to output for topK metrics (eg. sections)")
-	alertPeriod    = flag.Duration("alertPeriod", 2*time.Minute, "The length of the period for alerting on high traffic conditions (req/sec)")
-	alertThreshold = flag.Float64("alertThreshold", 10, "The threshold for alerting about high traffic conditions")
+	statsPeriod    = flag.Duration("statsPeriod", 10*time.Second, "The length of the period for computing all the metrics and displaying them on the console")
+	statsK         = flag.Int("statsK", 5, "The maximum number of values to output when displaying topK metrics (eg. sections)")
+	alertPeriod    = flag.Duration("alertPeriod", 2*time.Minute, "The length of the period for computing the request rate metric used for alerting about high traffic conditions")
+	alertThreshold = flag.Float64("alertThreshold", 10, "The threshold on the request rate metric for alerting about high traffic conditions")
 )
 
 func main() {
