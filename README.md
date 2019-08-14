@@ -108,14 +108,16 @@ This will ensure the tool cleans up after itself when exiting. For example, the 
 the inotify watches added by the tail package, since the Linux kernel may not automatically remove
 inotify watches after the process exits (see [here](https://godoc.org/github.com/hpcloud/tail#Tail.Cleanup)
 for more information).
-* Introduce a common interface that every metric needs to implement. This will standardize the lifecycle
-o every metric and it will make the code more maintainable if the number of metrics will grow. Moreover,
-it would allow to implement and create alerts on arbitrary metrics and not just on some specific ones.
+* Introduce a common interface that every metric should implement. This will standardize the lifecycle
+of every metric and it will make the code more maintainable if the number of metrics will grow. Moreover,
+it allows to implement and create alerts on arbitrary metrics and not just on some specific ones.
 * If the number of metrics for the `Manager` grows, it would need some change to keep track of them
 in a more handy way. The current implementation has an event loop that serializes the access to all
-the metrics objects that could become a bottleneck in case of many metrics and data points. Given the
-limited scope of this project, this can become an issue only if the load on the metrics manager
-increases significantly.
+the metrics objects, since their state is kept in memory. This could become a bottleneck in case of
+a huge increase in the number of metrics and/or data points to ingest. One possible solution is to
+store the state of all metrics into another component (eg. an external database) with enough consistency
+and performance guarantees. Given the limited scope of this project, I don't think this can become an
+issue since the load on the `Manager` isn't too high at the moment.
 
 ## Known limitations
 The library used for tailing the log file (https://github.com/hpcloud/tail) has known problems under
