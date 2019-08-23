@@ -56,7 +56,7 @@ func New(alertPeriod, statsPeriod time.Duration, k int, threshold float64, l *lo
 		return nil, eErr
 	}
 
-	a, aErr := alert.New(statsPeriod, alertPeriod, threshold, l)
+	a, aErr := alert.New(alertPeriod, threshold, l)
 	if aErr != nil {
 		return nil, aErr
 	}

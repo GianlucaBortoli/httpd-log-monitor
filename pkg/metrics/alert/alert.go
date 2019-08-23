@@ -22,22 +22,22 @@ type Alert struct {
 	Alerts    chan *msg // Alerts are sent here
 }
 
-// New returns the alert manager with the specified metrics and alerting period and threshold
-func New(statPeriod, alertPeriod time.Duration, threshold float64, l *log.Logger) (*Alert, error) {
-	if alertPeriod == 0 {
+// New returns the alert manager with the specified alerting period and threshold
+func New(period time.Duration, threshold float64, l *log.Logger) (*Alert, error) {
+	if period == 0 {
 		return nil, fmt.Errorf("cannot create alert with time window of width 0")
 	}
 	if l == nil {
 		l = log.New(os.Stderr, "", log.LstdFlags)
 	}
 
-	m, err := rate.New(statPeriod)
+	m, err := rate.New(period)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create rate metric for alert: %v", err)
 	}
 
 	return &Alert{
-		ticker:    time.NewTicker(alertPeriod),
+		ticker:    time.NewTicker(period),
 		log:       l,
 		metric:    m,
 		threshold: threshold,
