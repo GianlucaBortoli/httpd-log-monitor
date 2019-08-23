@@ -10,33 +10,26 @@ import (
 )
 
 func getTestAlert() *Alert {
-	a, _ := New(50*time.Millisecond, 100*time.Millisecond, 1, nil)
+	a, _ := New(100*time.Millisecond, 1, nil)
 	return a
 }
 
 func TestNew(t *testing.T) {
-	a, err := New(time.Second, 2*time.Second, 100, nil)
+	a, err := New(time.Second, 100, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, a)
-	assert.IsType(t, &Alert{}, a)
 	assert.Equal(t, float64(100), a.threshold)
 	assert.False(t, a.firing)
 }
 
-func TestNew_WrongAlertPeriod(t *testing.T) {
-	a, err := New(time.Second, 0, 100, nil)
-	assert.Error(t, err)
-	assert.Nil(t, a)
-}
-
-func TestNew_WrongStatPeriod(t *testing.T) {
-	a, err := New(0, time.Second, 100, nil)
+func TestNew_WrongPeriod(t *testing.T) {
+	a, err := New(0, 100, nil)
 	assert.Error(t, err)
 	assert.Nil(t, a)
 }
 
 func TestAlert_IncrByNoAlert(t *testing.T) {
-	a, _ := New(time.Second, time.Hour, 100, nil)
+	a, _ := New(time.Hour, 100, nil)
 	// This should not send an alert message, so the function shouldn't block on
 	// sending the message on te channel.
 	// Hence, if the tests exits it means that no message has been sent in the channel
@@ -97,7 +90,7 @@ func TestAlert_IncrByStopped(t *testing.T) {
 }
 
 func TestAlert_checkThresholdWithAlerts(t *testing.T) {
-	a, _ := New(50*time.Millisecond, 100*time.Millisecond, 1, nil)
+	a, _ := New(5*time.Second, 1.9, nil)
 	a.Start()
 
 	var wg sync.WaitGroup
@@ -105,18 +98,22 @@ func TestAlert_checkThresholdWithAlerts(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		// 10samples / 5sec = 2req/sec
+		// Threshold is set to 1.9 so I should get an alert message
 		msg := <-a.Alerts
 
 		fmt.Println(msg)
 		assert.NotNil(t, msg)
 		assert.Equal(t, highTraffic, msg.Type)
 
+		// After another period with no traffic, I should get a resolved message
 		msg = <-a.Alerts
 		fmt.Println(msg)
 		assert.NotNil(t, msg)
 		assert.Equal(t, resolved, msg.Type)
 	}()
 
+	// Add 10 data samples only once to simulate an initial spike of requests
 	a.IncrBy(10)
 	wg.Wait()
 }
