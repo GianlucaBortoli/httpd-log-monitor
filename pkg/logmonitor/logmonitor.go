@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/cog-qlik/httpd-log-monitor/internal/logparser"
-	"github.com/cog-qlik/httpd-log-monitor/internal/tailer"
-	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/manager"
+	"github.com/GianlucaBortoli/httpd-log-monitor/internal/logparser"
+	"github.com/GianlucaBortoli/httpd-log-monitor/internal/tailer"
+	"github.com/GianlucaBortoli/httpd-log-monitor/pkg/metrics/manager"
 	"github.com/hpcloud/tail"
 )
 

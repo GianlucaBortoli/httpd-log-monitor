@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/rate"
+	"github.com/GianlucaBortoli/httpd-log-monitor/pkg/metrics/rate"
 )
 
 // Alert handles alerts for the per-second requests

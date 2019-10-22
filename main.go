@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/cog-qlik/httpd-log-monitor/pkg/logmonitor"
+	"github.com/GianlucaBortoli/httpd-log-monitor/pkg/logmonitor"
 )
 
 var (

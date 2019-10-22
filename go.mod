@@ -1,4 +1,4 @@
-module github.com/cog-qlik/httpd-log-monitor
+module github.com/GianlucaBortoli/httpd-log-monitor
 
 go 1.12
 

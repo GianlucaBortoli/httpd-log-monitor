@@ -8,9 +8,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/alert"
-	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/rate"
-	"github.com/cog-qlik/httpd-log-monitor/pkg/metrics/topk"
+	"github.com/GianlucaBortoli/httpd-log-monitor/pkg/metrics/alert"
+	"github.com/GianlucaBortoli/httpd-log-monitor/pkg/metrics/rate"
+	"github.com/GianlucaBortoli/httpd-log-monitor/pkg/metrics/topk"
 )
 
 // Manager keeps track of all the statistics computed from logs

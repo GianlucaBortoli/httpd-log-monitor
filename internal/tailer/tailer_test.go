@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/cog-qlik/httpd-log-monitor/internal/fileutils"
+	"github.com/GianlucaBortoli/httpd-log-monitor/internal/fileutils"
 	"github.com/stretchr/testify/assert"
 )
 
