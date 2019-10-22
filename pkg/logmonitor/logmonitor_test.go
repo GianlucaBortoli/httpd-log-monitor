@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cog-qlik/httpd-log-monitor/internal/fileutils"
-	"github.com/cog-qlik/httpd-log-monitor/internal/logparser"
+	"github.com/GianlucaBortoli/httpd-log-monitor/internal/fileutils"
+	"github.com/GianlucaBortoli/httpd-log-monitor/internal/logparser"
 	"github.com/hpcloud/tail"
 	"github.com/stretchr/testify/assert"
 )
